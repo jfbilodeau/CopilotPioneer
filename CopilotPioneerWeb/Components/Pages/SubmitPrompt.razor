@@ -2,13 +2,24 @@
 <h3>Submit your prompt</h3>
 
 <EditForm Model="Model" OnValidSubmit="OnSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
 
     <div>
         <label>
             <h4>Submission title:</h4>
             <InputText Width="80" @bind-Value="Model.Title"/>
+        </label>
+    </div>
+    <div>
+        <label>
+            <h4>Product:</h4>
+            <InputSelect @bind-Value="Model.Product">
+                @foreach (var product in PioneerService.GetProducts())
+                {
+                    <option value="@product.Id">@product.Label</option>
+                }
+            </InputSelect>
         </label>
     </div>
     <div>
@@ -33,5 +44,5 @@
 </EditForm>
 
 @code {
-    
+
 }
