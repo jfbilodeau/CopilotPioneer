@@ -1,0 +1,37 @@
+﻿@page
+@model Submit
+@{
+    ViewData["Title"] = "Prompt Submission";
+}
+
+<div>
+    <h1 class="display-4">Submit a Prompt</h1>
+    <form method="post">
+        <div class="form-group">
+            <label asp-for="Submission.Product"></label>
+            <select asp-for="Submission.Product">
+                @foreach(var product in Model.PioneerService.GetProducts())
+                {
+                    <option value="@product.Id">@product.Label</option>
+                }
+            </select>
+            <span asp-validation-for="Submission.Product" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Submission.Title"></label>
+            <input asp-for="Submission.Title" class="form-control"/>
+            <span asp-validation-for="Submission.Title" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Submission.Prompt"></label>
+            <textarea asp-for="Submission.Prompt" class="form-control" rows="5" cols="80"></textarea>
+            <span asp-validation-for="Submission.Prompt" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Submission.Notes"></label>
+            <textarea asp-for="Submission.Notes" class="form-control" rows="5" cols="80"></textarea>
+            <span asp-validation-for="Submission.Notes" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
