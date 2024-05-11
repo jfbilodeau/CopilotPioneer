@@ -1,4 +1,5 @@
-﻿using CopilotPioneer.Web.Models;
+﻿using System.Net;
+using CopilotPioneer.Web.Models;
 using CopilotPioneer.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -16,13 +17,8 @@ public class Submissions(PioneerService pioneerService) : PageModel
         if (Id != null)
         {
             Submission = await pioneerService.GetSubmissionById(Id);
-
-            if (Submission != null)
-            {
-                return Page();
-            }
         }
 
-        return NotFound();
+        return Page();
     }
 }
