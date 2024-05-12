@@ -15,7 +15,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        working-directory: ./CopilotPioneer/CopilotPioneer.Web
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v1
@@ -24,12 +23,15 @@ jobs:
           include-prerelease: true
 
       - name: Build with dotnet
+        working-directory: ./CopilotPioneer/CopilotPioneer.Web
         run: dotnet build --configuration Release
 
       - name: dotnet publish
+        working-directory: ./CopilotPioneer/CopilotPioneer.Web
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/copilotpioneer
 
       - name: Upload artifact for deployment job
+        working-directory: ./CopilotPioneer/CopilotPioneer.Web
         uses: actions/upload-artifact@v3
         with:
           name: .net-app
