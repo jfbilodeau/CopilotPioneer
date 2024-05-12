@@ -1,6 +1,5 @@
 ﻿using Azure.Storage.Blobs;
 using CopilotPioneer.Web.Models;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Fluent;
 
