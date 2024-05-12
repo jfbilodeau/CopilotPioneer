@@ -8,6 +8,8 @@ namespace CopilotPioneer.Web.Pages;
 
 public class Submissions(PioneerService pioneerService) : PageModel
 {
+    public PioneerService PioneerService { get; private set; } = pioneerService;
+    
     [BindProperty(SupportsGet = true)]
     public string? Id { get; set; } = null;
     public Submission? Submission { get; set; } = null;
@@ -16,7 +18,7 @@ public class Submissions(PioneerService pioneerService) : PageModel
     {
         if (Id != null)
         {
-            Submission = await pioneerService.GetSubmissionById(Id);
+            Submission = await PioneerService.GetSubmissionById(Id);
         }
 
         return Page();

@@ -18,4 +18,8 @@
         <PackageReference Include="Microsoft.Identity.Web.DownstreamApi" Version="2.15.2"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Partials\SubmissionSummary.cshtml" />
+    </ItemGroup>
+
 </Project>

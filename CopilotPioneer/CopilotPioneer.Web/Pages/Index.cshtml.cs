@@ -1,17 +1,24 @@
+using CopilotPioneer.Web.Models;
+using CopilotPioneer.Web.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace CopilotPioneer.Web.Pages;
 
-public class IndexModel : PageModel
+public class IndexModel(ILogger<IndexModel> logger, PioneerService pioneerService) : PageModel
 {
-    private readonly ILogger<IndexModel> _logger;
+    private readonly ILogger<IndexModel> _logger = logger;
+    private readonly PioneerService _pioneerService = pioneerService;
 
-    public IndexModel(ILogger<IndexModel> logger)
-    {
-        _logger = logger;
-    }
+    [FromQuery(Name = "page")] public int Page { get; set; } = 0;
 
-    public void OnGet()
+    // [FromQuery(Name = "count")]
+    public int Count { get; set; } = 10;
+
+    public List<Submission> Submissions { get; private set; } = new List<Submission>();
+
+    public async Task OnGet()
     {
+        Submissions = await _pioneerService.GetLatestSubmissions(Page, Count);
     }
 }

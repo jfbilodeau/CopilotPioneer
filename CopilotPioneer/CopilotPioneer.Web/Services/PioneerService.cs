@@ -89,6 +89,27 @@ public class PioneerService
             new Product { Id = "Word", Label = "Word" }
         ];
     }
+
+    public async Task<List<Submission>> GetLatestSubmissions(int page, int count)
+    {
+        var sql = "SELECT * FROM Submissions s ORDER BY s.createdDate DESC OFFSET @offset LIMIT @limit";
+        
+        var query = new QueryDefinition(sql)
+            .WithParameter("@offset", page * count)
+            .WithParameter("@limit", count);
+        
+        var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
+        
+        var submissions = new List<Submission>();
+        
+        while (feedIterator.HasMoreResults)
+        {
+            var results = await feedIterator.ReadNextAsync();
+            submissions.AddRange(results);
+        }
+        
+        return submissions;
+    }
     
     public string GetProductName(string productId)
     {

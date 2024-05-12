@@ -12,13 +12,23 @@
     return;
 }
 
-<h2>Submission</h2>
+<h2>@Model.Submission.Title</h2>
 
 <p>
-    <strong>Author:</strong>
-    @Model.Submission.Author
+    <strong>For:</strong>
+    @Model.PioneerService.GetProductName(Model.Submission.Product)
 </p>
+
+<pre>@Model.Submission.Prompt</pre>
+
+@if (!string.IsNullOrEmpty(Model.Submission.Notes))
+{
+    <p>
+        <strong>Notes:</strong>
+        @Model.Submission.Notes
+    </p>
+}
+
 <p>
-    <strong>Product:</strong>
-    @Model.Submission.Product
+    <small>@Model.Submission.Author @@ @Model.Submission.CreatedDate</small>    
 </p>
