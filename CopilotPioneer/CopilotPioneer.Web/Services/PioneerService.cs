@@ -22,8 +22,8 @@ public class PioneerService
     
     public PioneerService(IConfiguration configuration)
     {
-        var cosmosDbConnectionString = configuration["CosmosDb:ConnectionString"];
-        var cosmosDbDatabaseName = configuration["CosmosDb:DatabaseName"];
+        var cosmosDbConnectionString = configuration["CosmosDb.ConnectionString"];
+        var cosmosDbDatabaseName = configuration["CosmosDb.DatabaseName"];
 
         var cosmosClient = new CosmosClientBuilder(cosmosDbConnectionString)
             .WithSerializerOptions(new CosmosSerializationOptions
@@ -32,10 +32,10 @@ public class PioneerService
             })
             .Build();
         _cosmosDbDatabase = cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDbDatabaseName).Result;
-        _submissionsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Submissions", "/createdDate").Result;
+        _submissionsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Submissions", "/author").Result;
         
-        var blobStorageAccountName = configuration["BlobStorage:AccountName"];
-        var blobStorageAccountKey = configuration["BlobStorage:AccountKey"];
+        var blobStorageAccountName = configuration["BlobStorage.AccountName"];
+        var blobStorageAccountKey = configuration["BlobStorage.AccountKey"];
 
         var connectionString = $"DefaultEndpointsProtocol=https;AccountName={blobStorageAccountName};AccountKey={blobStorageAccountKey};EndpointSuffix=core.windows.net";
         _blobServiceClient = new BlobServiceClient(connectionString);
@@ -49,7 +49,7 @@ public class PioneerService
         submission.LastModifiedDate = DateTime.Now;
         submission.Author = submitter;
         
-        await _submissionsContainer.CreateItemAsync(submission, new PartitionKey(submission.Id));
+        await _submissionsContainer.CreateItemAsync(submission);
 
         return submission;
     }

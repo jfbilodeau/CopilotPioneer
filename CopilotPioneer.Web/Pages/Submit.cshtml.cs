@@ -15,16 +15,16 @@ public class Submit(PioneerService pioneerService) : PageModel
     public void OnGet()
     {
     }
-    
+
     public async Task<IActionResult> OnPost()
     {
-        if (!ModelState.IsValid)
+        if (ModelState.IsValid)
         {
-            return Page();
-        }
-        
-        var result = await PioneerService.SaveSubmission(User.Identity.Name, Submission);
+            var result = await PioneerService.SaveSubmission(User.Identity.Name, Submission);
 
-        return Redirect($"/Submissions/{result.Id}");
+            return Redirect($"/Submissions/{result.Id}");
+        }
+
+        return Page();
     }
 }
