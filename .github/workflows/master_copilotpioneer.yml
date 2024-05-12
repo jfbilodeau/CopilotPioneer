@@ -16,14 +16,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: CD in project
+        run: cd ./CopilotPionner/CopilotPioneer.Web
+
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '8.x'
           include-prerelease: true
-
-      - name: CD in project
-        run: cd CopilotPionner/CopilotPioneer.Web
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
