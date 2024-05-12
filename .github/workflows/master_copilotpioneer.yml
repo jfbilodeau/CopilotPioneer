@@ -15,8 +15,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set working directory
         working-directory: ./CopilotPioneer/CopilotPioneer.Web
 
       - name: Set up .NET Core
