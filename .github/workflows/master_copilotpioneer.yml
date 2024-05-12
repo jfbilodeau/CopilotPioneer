@@ -31,7 +31,6 @@ jobs:
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/copilotpioneer
 
       - name: Upload artifact for deployment job
-        working-directory: ./CopilotPioneer/CopilotPioneer.Web
         uses: actions/upload-artifact@v3
         with:
           name: .net-app
