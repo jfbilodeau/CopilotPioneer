@@ -21,8 +21,8 @@ public class PioneerService
     
     public PioneerService(IConfiguration configuration)
     {
-        var cosmosDbConnectionString = configuration["CosmosDb.ConnectionString"];
-        var cosmosDbDatabaseName = configuration["CosmosDb.DatabaseName"];
+        var cosmosDbConnectionString = configuration["CosmosDbConnectionString"];
+        var cosmosDbDatabaseName = configuration["CosmosDbDatabaseName"];
 
         var cosmosClient = new CosmosClientBuilder(cosmosDbConnectionString)
             .WithSerializerOptions(new CosmosSerializationOptions
@@ -33,8 +33,8 @@ public class PioneerService
         _cosmosDbDatabase = cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDbDatabaseName).Result;
         _submissionsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Submissions", "/author").Result;
         
-        var blobStorageAccountName = configuration["BlobStorage.AccountName"];
-        var blobStorageAccountKey = configuration["BlobStorage.AccountKey"];
+        var blobStorageAccountName = configuration["BlobStorageAccountName"];
+        var blobStorageAccountKey = configuration["BlobStorageAccountKey"];
 
         var connectionString = $"DefaultEndpointsProtocol=https;AccountName={blobStorageAccountName};AccountKey={blobStorageAccountKey};EndpointSuffix=core.windows.net";
         _blobServiceClient = new BlobServiceClient(connectionString);
