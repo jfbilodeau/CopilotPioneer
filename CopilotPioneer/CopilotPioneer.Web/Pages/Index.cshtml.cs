@@ -10,15 +10,16 @@ public class IndexModel(ILogger<IndexModel> logger, PioneerService pioneerServic
     private readonly ILogger<IndexModel> _logger = logger;
     private readonly PioneerService _pioneerService = pioneerService;
 
-    [FromQuery(Name = "page")] public int Page { get; set; } = 0;
+    [FromQuery(Name = "page")]
+    public int PageNumber { get; set; } = 0;
 
     // [FromQuery(Name = "count")]
-    public int Count { get; set; } = 10;
+    public int PageSize { get; set; } = 10;
 
     public List<Submission> Submissions { get; private set; } = new List<Submission>();
 
     public async Task OnGet()
     {
-        Submissions = await _pioneerService.GetLatestSubmissions(Page, Count);
+        Submissions = await _pioneerService.GetLatestSubmissions(PageNumber, PageSize);
     }
 }
