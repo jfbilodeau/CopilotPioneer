@@ -15,6 +15,7 @@ public class PioneerService
 {
     private readonly Database _cosmosDbDatabase;
     private readonly Container _submissionsContainer;
+    private readonly Container _profileContainer;
     
     private readonly BlobServiceClient _blobServiceClient;
     private readonly BlobContainerClient _screenshotContainerClient;
@@ -32,6 +33,7 @@ public class PioneerService
             .Build();
         _cosmosDbDatabase = cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDbDatabaseName).Result;
         _submissionsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Submissions", "/author").Result;
+        _profileContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Profiles", "/id").Result;
         
         var blobStorageAccountName = configuration["BlobStorageAccountName"];
         var blobStorageAccountKey = configuration["BlobStorageAccountKey"];
@@ -117,5 +119,40 @@ public class PioneerService
         var product = products.FirstOrDefault(p => p.Id == productId);
 
         return product?.Label ?? "[unknown product]";
+    }
+
+    public async Task<Profile> GetProfileOrDefault(string id)
+    {
+        return await GetProfile(id) ?? new Profile
+        {
+            Id = id
+        };
+    }
+
+    public async Task UpdateProfile(Profile profile)
+    {
+        await _profileContainer.UpsertItemAsync(profile);
+    }
+
+    public async Task<Profile?> GetProfile(string id)
+    {
+        var sql = "SELECT * FROM Profiles p where p.id = @id";
+
+        var query = new QueryDefinition(sql)
+            .WithParameter("@id", id);
+
+        var feedIterator = _profileContainer.GetItemQueryIterator<Profile>(query);
+
+        while (feedIterator.HasMoreResults)
+        {
+            var profiles = await feedIterator.ReadNextAsync();
+
+            foreach (var profile in profiles)
+            {
+                return profile;
+            }
+        }
+
+        return null;
     }
 }

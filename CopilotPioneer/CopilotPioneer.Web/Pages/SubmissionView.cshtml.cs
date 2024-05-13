@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace CopilotPioneer.Web.Pages;
 
-public class Submissions(PioneerService pioneerService) : PageModel
+public class SubmissionView(PioneerService pioneerService) : PageModel
 {
     public PioneerService PioneerService { get; private set; } = pioneerService;
     
