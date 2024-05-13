@@ -4,7 +4,6 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <!-- <UserSecretsId>aspnet-CopilotPioneer-4B88EF97-73A1-4697-9C75-FF9B176E61AE</UserSecretsId> -->
         <UserSecretsId>52f24e6c-6b06-4be3-871e-3f19221f81e5</UserSecretsId>
     </PropertyGroup>
 
