@@ -1,0 +1,17 @@
+﻿@page "/Profile/{id}"
+@model ProfileView
+
+@{
+    ViewData["Title"] = "Profile";
+}
+
+@if (Model.Profile == null)
+{
+    <p>Profile not found</p>
+    return;
+}
+
+<h3>@Model.Profile.GetDisplayName()</h3>
+
+<p>@Model.Profile.Id</p>
+<p>@Model.Profile.Points points</p>

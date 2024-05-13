@@ -1,0 +1,33 @@
+﻿@page "/MyProfile"
+@using System.Reflection.Metadata.Ecma335
+@using CopilotPioneer.Web.Models
+@model ProfileEdit
+
+@{
+    ViewData["Title"] = "Edit Profile";
+}
+
+@if (Model.Profile == null)
+{
+    <h3>Not authorized</h3>
+
+    return;
+}
+
+<div>
+    <h3>Edit my profile</h3>
+
+    <form method="post">
+        <p>
+            <label>User ID:</label>
+            @Model.Profile.Id
+        </p>
+        <p>
+            <label asp-for="Profile.Name">Name:</label>
+            <input type="text" id="DisplayName" name="Name" asp-for="Profile.Name"/>
+        </p>
+        <p>
+            <button type="submit">Save</button>
+        </p>
+    </form>
+</div>
