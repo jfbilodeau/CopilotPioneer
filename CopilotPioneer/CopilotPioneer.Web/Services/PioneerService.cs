@@ -1,4 +1,5 @@
-﻿using Azure.Storage.Blobs;
+﻿using System.Text.RegularExpressions;
+using Azure.Storage.Blobs;
 using CopilotPioneer.Web.Models;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Fluent;
@@ -11,7 +12,7 @@ public class Product
     public string Label { get; set; } = "";
 }
 
-public class PioneerService
+public partial class PioneerService
 {
     private readonly Database _cosmosDbDatabase;
     private readonly Container _submissionsContainer;
@@ -19,6 +20,9 @@ public class PioneerService
     
     private readonly BlobServiceClient _blobServiceClient;
     private readonly BlobContainerClient _screenshotContainerClient;
+    
+    [GeneratedRegex(@"#\w+")]
+    private static partial Regex TagRegex();
     
     public PioneerService(IConfiguration configuration)
     {
@@ -31,6 +35,7 @@ public class PioneerService
                 PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
             })
             .Build();
+        
         _cosmosDbDatabase = cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDbDatabaseName).Result;
         _submissionsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Submissions", "/author").Result;
         _profileContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Profiles", "/id").Result;
@@ -49,6 +54,18 @@ public class PioneerService
         submission.CreatedDate = DateTime.Now;
         submission.LastModifiedDate = DateTime.Now;
         submission.Author = submitter;
+        
+        // Extract tags from the submission
+        var tags = new List<string>();
+        
+        var tagMatches = TagRegex().Matches(submission.Notes);
+        
+        foreach (Match match in tagMatches)
+        {
+            tags.Add(match.Value);
+        }
+        
+        submission.Tags = tags.ToArray();
         
         await _submissionsContainer.CreateItemAsync(submission);
 

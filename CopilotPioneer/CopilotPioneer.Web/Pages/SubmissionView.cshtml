@@ -3,32 +3,43 @@
 
 @{
     ViewBag.Title = "Submission";
-    Layout = "_Layout";
 }
 
-@if (Model.Submission == null)
-{
-    <p>Submission not found</p>
-    return;
-}
+<div>
+    @if (Model.Submission == null)
+    {
+        <p>Submission not found</p>
+        return;
+    }
 
-<h2>@Model.Submission.Title</h2>
+    <h2>@Model.Submission.Title</h2>
 
-<p>
-    <strong>For:</strong>
-    @Model.PioneerService.GetProductName(Model.Submission.Product)
-</p>
-
-<pre>@Model.Submission.Prompt</pre>
-
-@if (!string.IsNullOrEmpty(Model.Submission.Notes))
-{
     <p>
-        <strong>Notes:</strong><br/>
-        @Model.Submission.Notes
+        <strong>For:</strong>
+        @Model.PioneerService.GetProductName(Model.Submission.Product)
     </p>
-}
 
-<p>
-    <small>@Model.Submission.Author @@ @Model.Submission.CreatedDate</small>    
-</p>
+    <pre>@Model.Submission.Prompt</pre>
+
+    @if (!string.IsNullOrEmpty(Model.Submission.Notes))
+    {
+        <p>
+            <strong>Notes:</strong><br/>
+            @Model.Submission.Notes
+        </p>
+    }
+    
+    @if (Model.Submission.Tags.Any())
+    {
+        <div>
+            @foreach (var tag in Model.Submission.Tags)
+            {
+                <span class="badge badge-secondary"><a href="/Tags/@tag">@tag</a></span>
+            }
+        </div>
+    }
+
+    <p>
+        <small>@Model.Submission.Author @@ @Model.Submission.CreatedDate</small>
+    </p>
+</div>

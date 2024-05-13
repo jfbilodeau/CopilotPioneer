@@ -10,7 +10,7 @@ public class Submit(PioneerService pioneerService) : PageModel
     public PioneerService PioneerService { get; private set; } = pioneerService;
 
     [BindProperty]
-    public Submission Submission { get; set; } = new Submission();
+    public Submission Submission { get; set; } = new();
 
     public void OnGet()
     {

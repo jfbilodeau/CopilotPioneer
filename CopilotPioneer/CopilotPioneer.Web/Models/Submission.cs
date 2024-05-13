@@ -19,5 +19,7 @@ public sealed class Submission
     public string Prompt { get; set; } = "";
     public string Notes { get; set; } = "";
     
+    public string[] Tags { get; set; } = [];
+    
     public string[] ScreenshotUrl { get; set; } = [];
 }

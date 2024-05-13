@@ -30,6 +30,7 @@
         <div class="form-group">
             <label asp-for="Submission.Notes"></label>
             <textarea class="form-control" rows="5" cols="80" asp-for="Submission.Notes"></textarea>
+            <small>(#hashtags are supported in notes)</small>
             <span asp-validation-for="Submission.Notes" class="text-danger"></span>
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>

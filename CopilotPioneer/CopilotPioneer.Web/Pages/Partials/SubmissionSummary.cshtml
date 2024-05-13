@@ -7,5 +7,14 @@
         </a>
     </h3>
     <pre>@Model.Title</pre>
+    @if (Model.Tags.Any())
+    {
+        <div>
+            @foreach (var tag in Model.Tags)
+            {
+                <span class="badge badge-secondary"><a href="/Tags/@tag">@tag</a></span>
+            }
+        </div>
+    }
     <small>- @Model.Author @@ @Model.CreatedDate</small>
 </div>
