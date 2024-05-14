@@ -12,7 +12,7 @@ public class ProfileView(PioneerService pioneerService) : PageModel
     
     public int PageNumber { get; set; } = 0;
 
-    public Profile? Profile { get; private set; } = new();
+    public Profile Profile { get; private set; } = new();
     
     public List<Submission> Submissions { get; private set; } = new();
 
@@ -28,12 +28,14 @@ public class ProfileView(PioneerService pioneerService) : PageModel
             }
         }
         
-        Profile = await pioneerService.GetProfile(UserId);
+        var profile = await pioneerService.GetProfile(UserId);
 
-        if (Profile == null)
+        if (profile == null)
         {
             return RedirectToPage("ProfileEdit");
         }
+        
+        Profile = profile;
         
         Submissions = await pioneerService.GetSubmissionsByFilter(UserId, pageNumber: PageNumber);
 

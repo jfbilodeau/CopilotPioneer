@@ -223,4 +223,12 @@ public partial class PioneerService
 
         return null;
     }
+    
+    public async void AddPoints(string userId, int points)
+    {
+        var profile = await GetProfileOrDefault(userId);
+        profile.Points += points;
+        
+        await UpdateProfile(profile);
+    }
 }

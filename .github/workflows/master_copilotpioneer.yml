@@ -58,11 +58,21 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_FDB5AFD3EC8A4BC79F4B5EB749B658EF }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B2167169BA72492BAED5EB24AA32873A }}
 
+      # Deploy to prod environment
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'copilotpioneer'
+          slot-name: 'Production'
+          package: .
+          
+      # Second deploy to test environment
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'copilotpioneertest'
           slot-name: 'Production'
           package: .
           
