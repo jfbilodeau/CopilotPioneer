@@ -1,4 +1,4 @@
-﻿@page "/Profile/{id}"
+﻿@page "/Profile/{userId}"
 @model ProfileView
 
 @{
@@ -15,3 +15,9 @@
 
 <p>@Model.Profile.Id</p>
 <p>@Model.Profile.Points points</p>
+<h3>Submissions</h3>
+@foreach (var submission in Model.Submissions)
+{
+    <partial name="/Pages/Partials/SubmissionSummary.cshtml" model="@submission"/>
+    <SubmissionSummary Submission="submission"/>
+}

@@ -10,25 +10,28 @@ public class IndexModel(ILogger<IndexModel> logger, PioneerService pioneerServic
     private readonly ILogger<IndexModel> _logger = logger;
 
     public PioneerService PioneerService { get; private set; } = pioneerService;
-    
+
     [FromQuery(Name = "page")]
     public int PageNumber { get; set; } = 0;
 
-    [BindProperty(SupportsGet = true)]
+    [BindProperty(Name = "userId", SupportsGet = true)]
+    public string UserIdFilter { get; set; } = "";
+
+    [BindProperty(Name = "product", SupportsGet = true)]
     public string ProductFilter { get; set; } = "";
-    [BindProperty(SupportsGet = true)]
+
+    [BindProperty(Name = "tag", SupportsGet = true)]
     public string TagFilter { get; set; } = "";
-    [BindProperty(SupportsGet = true)]
+
+    [BindProperty(Name="sortBy", SupportsGet = true)] 
     public string SortBy { get; set; } = "latest";
-    
-    // [FromQuery(Name = "count")]
-    public int PageSize { get; set; } = 10;
 
     public List<Submission> Submissions { get; private set; } = new();
 
     public async Task OnGet()
     {
         // Submissions = await PioneerService.GetLatestSubmissions(PageNumber, PageSize);
-        Submissions = await PioneerService.GetSubmissionsByFilter(ProductFilter, TagFilter, SortBy, PageNumber, PageSize);
+        Submissions =
+            await PioneerService.GetSubmissionsByFilter(UserIdFilter, ProductFilter, TagFilter, SortBy, PageNumber);
     }
 }

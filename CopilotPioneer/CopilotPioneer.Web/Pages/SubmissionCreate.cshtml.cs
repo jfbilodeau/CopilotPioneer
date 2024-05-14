@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace CopilotPioneer.Web.Pages;
 
-public class Submit(PioneerService pioneerService) : PageModel
+public class SubmissionCreate(PioneerService pioneerService) : PageModel
 {
     public PioneerService PioneerService { get; private set; } = pioneerService;
 
@@ -23,8 +23,13 @@ public class Submit(PioneerService pioneerService) : PageModel
             return Page();
         }
         
+        if (User.Identity?.Name == null)
+        {
+            return Unauthorized();
+        }
+        
         var result = await PioneerService.SaveSubmission(User.Identity.Name, Submission);
 
-        return Redirect($"/Submissions/{result.Id}");
+        return Redirect($"/Submission/{result.Id}");
     }
 }

@@ -1,20 +1,20 @@
 ﻿@model CopilotPioneer.Web.Models.Submission
 
 <div>
-    <h3>
-        <a href="/Submissions/@Model.Id">
+    <strong>
+        <a asp-page="SubmissionView" asp-route-id="@Model.Id">
             @Model.Title
         </a>
-    </h3>
+    </strong>
     <pre>@Model.Title</pre>
     @if (Model.Tags.Any())
     {
         <div>
             @foreach (var tag in Model.Tags)
             {
-                <span class="badge badge-secondary"><a href="/Tags/@tag">@tag</a></span>
+                <span class="badge badge-secondary"><a asp-page="Index" asp-route-tag="@tag">@tag</a></span>
             }
         </div>
     }
-    <small>- @Model.Author @@ @Model.CreatedDate</small>
+    <small>Submitted by @Model.Author @@ @Model.CreatedDate</small>
 </div>

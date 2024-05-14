@@ -131,9 +131,16 @@ public partial class PioneerService
         return submissions;
     }
 
-    public async Task<List<Submission>> GetSubmissionsByFilter(string productFilter, string tagFilter, string sortBy, int pageNumber, int pageSize)
+    private const int PageSize = 10;
+
+    public async Task<List<Submission>> GetSubmissionsByFilter(string userId = "", string productFilter = "", string tagFilter = "", string sortBy = "", int pageNumber = 1, int pageSize = PageSize)
     {
         var query = _submissionsContainer.GetItemLinqQueryable<Submission>().AsQueryable();
+        
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            query = query.Where(s => s.Author == userId);
+        }
         
         if (!string.IsNullOrWhiteSpace(productFilter))
         {
