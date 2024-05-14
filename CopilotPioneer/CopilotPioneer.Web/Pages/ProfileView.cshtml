@@ -5,7 +5,12 @@
     ViewData["Title"] = "Profile";
 }
 
-<h3>@Model.Profile.GetDisplayName() <small><a asp-page="ProfileEdit" class="fa fa-pen"><span></span></a></small></h3>
+<h3>@Model.Profile.GetDisplayName() 
+    @if (User.Identity?.Name == Model.Profile.Name)
+    {
+        <small><a asp-page="ProfileEdit" class="fa fa-pen"><span></span></a></small>
+    }
+</h3 >
 
 <p>@Model.Profile.Id</p>
 <p>@Model.Profile.Points points</p>
