@@ -5,13 +5,7 @@
     ViewData["Title"] = "Profile";
 }
 
-@if (Model.Profile == null)
-{
-    <p>Profile not found</p>
-    return;
-}
-
-<h3>@Model.Profile.GetDisplayName()</h3>
+<h3>@Model.Profile.GetDisplayName() <small>[<a asp-page="ProfileEdit">Edit</a>]</small></h3>
 
 <p>@Model.Profile.Id</p>
 <p>@Model.Profile.Points points</p>
