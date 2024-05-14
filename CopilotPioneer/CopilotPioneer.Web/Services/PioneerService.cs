@@ -194,7 +194,7 @@ public partial class PioneerService
         return await GetProfile(id) ?? new Profile
         {
             Id = id,
-            Points = 10
+            Points = 10,
         };
     }
 

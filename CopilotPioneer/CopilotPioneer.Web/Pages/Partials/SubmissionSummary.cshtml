@@ -16,5 +16,5 @@
             }
         </div>
     }
-    <small>Submitted by @Model.Author @@ @Model.CreatedDate</small>
+    <small>Submitted by <a asp-page="ProfileView" asp-route-userId="@User.Identity?.Name">@Model.Author</a> @@ @Model.CreatedDate</small>
 </div>
