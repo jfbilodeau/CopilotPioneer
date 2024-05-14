@@ -11,7 +11,7 @@ public class Tags(PioneerService pioneerService) : PageModel
     public string Tag { get; set; } = "";
     
     [FromQuery(Name = "page")]
-    public int Page { get; set; } = 1;
+    public int PageNumber { get; set; } = 1;
     public int PageSize { get; set; } = 10;
     
     public List<Submission> Submissions { get; private set; } = [];

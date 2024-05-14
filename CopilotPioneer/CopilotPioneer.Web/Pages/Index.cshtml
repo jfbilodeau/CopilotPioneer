@@ -6,9 +6,30 @@
 
 <div class="text-center">
     <h1 class="display-4">Latest submissions</h1>
+    <form method="get">
+        Product:
+        <select asp-for="ProductFilter">
+            <option value="">Any</option>
+            @foreach (var product in Model.PioneerService.GetProducts())
+            {
+                <option value="@product.Id">@product.Label</option>
+            }
+        </select>
+
+        Tag:
+        <input type="text" asp-for="TagFilter"/>
+
+        Sort by:
+        <select asp-for="SortBy">
+            <option value="Newest">newest</option>
+            <option value="Oldest">oldest</option>
+        </select>
+
+        <button type="submit">Filter</button>
+    </form>
     @foreach (var submission in Model.Submissions)
     {
         <partial name="/Pages/Partials/SubmissionSummary.cshtml" model="@submission"/>
-        <SubmissionSummary Submission="submission" />
+        <SubmissionSummary Submission="submission"/>
     }
 </div>

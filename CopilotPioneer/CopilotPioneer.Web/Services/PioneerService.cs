@@ -129,6 +129,59 @@ public partial class PioneerService
         
         return submissions;
     }
+
+    public async Task<List<Submission>> GetSubmissionsByFilter(string productFilter, string tagFilter, string sortBy, int pageNumber, int pageSize)
+    {
+        var sql = "SELECT * FROM Submissions s";
+        var parameters = new List<(string, object)>();
+        
+        if (!string.IsNullOrWhiteSpace(productFilter))
+        {
+            sql += " WHERE ARRAY_CONTAINS(@products, s.product)";
+            parameters.Add(("@products", productFilter));
+        }
+        
+        if (!string.IsNullOrWhiteSpace(tagFilter))
+        {
+            sql += " AND ARRAY_CONTAINS(@tags, s.tags)";
+            parameters.Add(("@tags", tagFilter));
+        }
+
+        switch (sortBy)
+        {
+            case "oldest":
+                sql += " ORDER BY s.createdDate DESC";
+                break;
+            case "latest":
+            default:
+                sql += " ORDER BY s.createdDate";
+                break;
+        }
+        
+        sql += $" DESC OFFSET @offset LIMIT @limit";
+        
+        parameters.Add(("@offset", pageNumber * pageSize));
+        parameters.Add(("@limit", pageSize));
+        
+        var query = new QueryDefinition(sql);
+        
+        foreach (var (name, value) in parameters)
+        {
+            query.WithParameter(name, value);
+        }
+        
+        var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
+        
+        var submissions = new List<Submission>();
+        
+        while (feedIterator.HasMoreResults)
+        {
+            var results = await feedIterator.ReadNextAsync();
+            submissions.AddRange(results);
+        }
+        
+        return submissions;
+    }
     
     public string GetProductName(string productId)
     {
