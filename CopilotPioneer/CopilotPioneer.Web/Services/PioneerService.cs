@@ -3,6 +3,7 @@ using Azure.Storage.Blobs;
 using CopilotPioneer.Web.Models;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Fluent;
+using Microsoft.Azure.Cosmos.Linq;
 
 namespace CopilotPioneer.Web.Services;
 
@@ -132,45 +133,35 @@ public partial class PioneerService
 
     public async Task<List<Submission>> GetSubmissionsByFilter(string productFilter, string tagFilter, string sortBy, int pageNumber, int pageSize)
     {
-        var sql = "SELECT * FROM Submissions s";
-        var parameters = new List<(string, object)>();
+        var query = _submissionsContainer.GetItemLinqQueryable<Submission>().AsQueryable();
         
         if (!string.IsNullOrWhiteSpace(productFilter))
         {
-            sql += " WHERE ARRAY_CONTAINS(@products, s.product)";
-            parameters.Add(("@products", productFilter));
+            query = query.Where(s => s.Product == productFilter);
         }
         
         if (!string.IsNullOrWhiteSpace(tagFilter))
         {
-            sql += " AND ARRAY_CONTAINS(@tags, s.tags)";
-            parameters.Add(("@tags", tagFilter));
+            if (!tagFilter.StartsWith("#"))
+            {
+                tagFilter = "#" + tagFilter;
+            }
+            
+            query = query.Where(s => s.Tags.Contains(tagFilter));
+        }
+        
+        if (sortBy == "oldest")
+        {
+            query = query.OrderBy(s => s.CreatedDate);
+        }
+        else
+        {
+            query = query.OrderByDescending(s => s.CreatedDate);
         }
 
-        switch (sortBy)
-        {
-            case "oldest":
-                sql += " ORDER BY s.createdDate DESC";
-                break;
-            case "latest":
-            default:
-                sql += " ORDER BY s.createdDate";
-                break;
-        }
+        query = query.Skip(pageNumber * pageSize).Take(pageSize);
         
-        sql += $" DESC OFFSET @offset LIMIT @limit";
-        
-        parameters.Add(("@offset", pageNumber * pageSize));
-        parameters.Add(("@limit", pageSize));
-        
-        var query = new QueryDefinition(sql);
-        
-        foreach (var (name, value) in parameters)
-        {
-            query.WithParameter(name, value);
-        }
-        
-        var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
+        var feedIterator = query.ToFeedIterator();
         
         var submissions = new List<Submission>();
         
