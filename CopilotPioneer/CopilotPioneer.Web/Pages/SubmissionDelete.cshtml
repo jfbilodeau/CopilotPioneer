@@ -1,0 +1,35 @@
+﻿@page "/Submission/Delete/{id}"
+@model SubmissionDelete
+
+@{
+    ViewData["Title"] = "Delete submission";
+}
+
+<div>
+    <h1 class="display-4">Delete submission</h1>
+
+    <h2>
+        @Model.Submission.Title
+    </h2>
+
+    <p>
+        <strong>For:</strong>
+        @Model.PioneerService.GetProductName(Model.Submission.Product)
+    </p>
+
+    <p>
+        <strong>Prompt: </strong> @Model.Submission.Prompt
+    </p>
+
+    @if (!string.IsNullOrEmpty(Model.Submission.Notes))
+    {
+        <p>
+            <strong>Notes:</strong> @Model.Submission.Notes
+        </p>
+    }
+
+    <form method="post">
+        <button type="submit">Delete</button>
+        <a asp-page="SubmissionView" asp-route-id="@Model.SubmissionId">Cancel</a>
+    </form>
+</div>

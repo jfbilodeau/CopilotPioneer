@@ -1,4 +1,4 @@
-﻿@page "/Submission/{id}"
+﻿@page "/Submission/View/{id}"
 @model SubmissionView
 
 @{
@@ -10,7 +10,10 @@
         @Model.Submission.Title
         @if (User.Identity?.Name == Model.Submission.Author)
         {
-            <small><a asp-page="SubmissionEdit" asp-route-id="@Model.Submission.Id" class="fa fa-pen"></a></small>
+            <small>
+                <a asp-page="SubmissionEdit" asp-route-id="@Model.Submission.Id" class="fa fa-pen"></a>
+                <a asp-page="SubmissionDelete" asp-route-id="@Model.Submission.Id" class="fa fa-trash"></a>
+            </small>
         }
     </h2>
 
@@ -19,7 +22,9 @@
         @Model.PioneerService.GetProductName(Model.Submission.Product)
     </p>
 
-    <pre>@Model.Submission.Prompt</pre>
+    <p>
+        <code>@Model.Submission.Prompt</code>
+    </p>
 
     @if (!string.IsNullOrEmpty(Model.Submission.Notes))
     {
@@ -28,13 +33,15 @@
             @Model.Submission.Notes
         </p>
     }
-    
+
     @if (Model.Submission.Tags.Any())
     {
         <div>
             @foreach (var tag in Model.Submission.Tags)
             {
-                <span class="badge badge-secondary"><a asp-page="Index" asp-route-tag="@tag">@tag</a></span>
+                <span class="badge badge-secondary">
+                    <a asp-page="Index" asp-route-tag="@tag">@tag</a>
+                </span>
             }
         </div>
     }

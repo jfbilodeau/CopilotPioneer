@@ -179,6 +179,11 @@ public partial class PioneerService
 
         await _submissionsContainer.UpsertItemAsync(submission);
     }
+    
+    public async Task DeleteSubmission(Submission submission)
+    {
+        await _submissionsContainer.DeleteItemAsync<Submission>(submission.Id, new PartitionKey(submission.Author));
+    }
 
     private static void UpdateSubmissionTags(Submission submission)
     {

@@ -1,4 +1,4 @@
-﻿@page "/Profile/{userId}"
+﻿@page "/Profile/View/{userId}"
 @model ProfileView
 
 @{
@@ -8,7 +8,9 @@
 <h3>@Model.Profile.GetDisplayName() 
     @if (User.Identity?.Name == Model.Profile.Id)
     {
-        <small><a asp-page="ProfileEdit" class="fa fa-pen"></a></small>
+        <small>
+            <a asp-page="ProfileEdit" class="fa fa-pen"></a>
+        </small>
     }
 </h3 >
 

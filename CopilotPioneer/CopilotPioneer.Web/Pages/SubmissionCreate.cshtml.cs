@@ -30,6 +30,6 @@ public class SubmissionCreate(PioneerService pioneerService) : PageModel
         
         var result = await PioneerService.SaveSubmission(User.Identity.Name, Submission);
 
-        return Redirect($"/Submission/{result.Id}");
+        return RedirectToPage("SubmissionView", new { id = result.Id });
     }
 }
