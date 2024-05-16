@@ -60,8 +60,6 @@ public class SubmissionEdit(PioneerService pioneerService) : PageModel
         
         await PioneerService.UpdateSubmission(submission);
         
-        Response.Redirect($"/Submission/{SubmissionId}");
-        
-        return Page();
+        return RedirectToPage("SubmissionView", new { id = SubmissionId });
     }
 }
