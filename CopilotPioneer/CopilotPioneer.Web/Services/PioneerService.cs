@@ -144,6 +144,8 @@ public partial class PioneerService
                 tagFilter = "#" + tagFilter;
             }
             
+            tagFilter = tagFilter.ToLower();
+            
             query = query.Where(s => s.Tags.Contains(tagFilter));
         }
         
@@ -194,7 +196,7 @@ public partial class PioneerService
         
         foreach (Match match in tagMatches)
         {
-            tags.Add(match.Value);
+            tags.Add(match.Value.ToLower());
         }
         
         submission.Tags = tags.ToArray();
