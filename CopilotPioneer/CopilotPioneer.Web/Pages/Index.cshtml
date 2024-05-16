@@ -28,8 +28,10 @@
 
         <button type="submit">Filter</button>
     </form>
+    <div class="list-group justify-content-center">
     @foreach (var submission in Model.Submissions)
     {
         <partial name="/Pages/Partials/SubmissionSummary.cshtml" model="@submission"/>
     }
+    </div>
 </div>

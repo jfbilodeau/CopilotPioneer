@@ -6,13 +6,13 @@
 }
 
 <div>
-    @if (Model.Submission == null)
-    {
-        <p>Submission not found</p>
-        return;
-    }
-
-    <h2>@Model.Submission.Title</h2>
+    <h2>
+        @Model.Submission.Title
+        @if (User.Identity?.Name == Model.Submission.Author)
+        {
+            <small><a asp-page="SubmissionEdit" asp-route-id="@Model.Submission.Id" class="fa fa-pen"></a></small>
+        }
+    </h2>
 
     <p>
         <strong>For:</strong>
@@ -34,7 +34,7 @@
         <div>
             @foreach (var tag in Model.Submission.Tags)
             {
-                <span class="badge badge-secondary"><a href="/Tags/@tag">@tag</a></span>
+                <span class="badge badge-secondary"><a asp-page="Index" asp-route-tag="@tag">@tag</a></span>
             }
         </div>
     }

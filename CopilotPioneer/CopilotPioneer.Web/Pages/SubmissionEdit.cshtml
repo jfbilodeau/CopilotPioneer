@@ -1,18 +1,18 @@
-﻿@page "/Submit"
-@model SubmissionCreate
+﻿@page "/Profile/Submission/Edit/{id}"
+@model SubmissionEdit
 
 @{
-    ViewData["Title"] = "Prompt Submission";
+    ViewData["Title"] = "Edit submission";
 }
 
 <div>
-    <h1 class="display-4">Submit a Prompt</h1>
-    
+    <h1 class="display-4">Edit submission</h1>
+
     <form method="post">
         <div class="form-group">
             <label asp-for="Submission.Product"></label>
             <select class="form-control"  asp-for="Submission.Product">
-                @foreach(var product in Model.PioneerService.GetProducts())
+                @foreach (var product in Model.PioneerService.GetProducts())
                 {
                     <option value="@product.Id">@product.Label</option>
                 }
@@ -21,21 +21,21 @@
         </div>
         <div class="form-group">
             <label asp-for="Submission.Title"></label>
-            <input class="form-control" asp-for="Submission.Title"/>
+            <input class="form-control"  type="text" asp-for="Submission.Title"/>
             <span asp-validation-for="Submission.Title" class="text-danger"></span>
         </div>
         <div class="form-group">
             <label asp-for="Submission.Prompt"></label>
-            <textarea class="form-control" rows="5" cols="80" asp-for="Submission.Prompt"></textarea>
+            <textarea class="form-control"  asp-for="Submission.Prompt"></textarea>
             <span asp-validation-for="Submission.Prompt" class="text-danger"></span>
         </div>
         <div class="form-group">
             <label asp-for="Submission.Notes"></label>
-            <textarea class="form-control" rows="5" cols="80" asp-for="Submission.Notes"></textarea>
-            <small>(#hashtags are supported in notes)</small>
+            <textarea class="form-control"  asp-for="Submission.Notes"></textarea>
             <span asp-validation-for="Submission.Notes" class="text-danger"></span>
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <div class="form-group">
+            <button type="submit">Save</button>
+        </div>
     </form>
-    <p>(The ability to add screenshots/images coming soon)</p>
 </div>

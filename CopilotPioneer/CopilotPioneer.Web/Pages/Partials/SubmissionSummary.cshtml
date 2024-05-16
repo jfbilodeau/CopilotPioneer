@@ -1,20 +1,28 @@
 ﻿@model CopilotPioneer.Web.Models.Submission
 
-<div>
-    <strong>
-        <a asp-page="SubmissionView" asp-route-id="@Model.Id">
-            @Model.Title
-        </a>
-    </strong>
-    <pre>@Model.Prompt</pre>
-    @if (Model.Tags.Any())
-    {
-        <div>
-            @foreach (var tag in Model.Tags)
-            {
-                <span class="badge badge-secondary"><a asp-page="Index" asp-route-tag="@tag">@tag</a></span>
-            }
-        </div>
-    }
-    <small>Submitted by <a asp-page="ProfileView" asp-route-userId="@Model.Author">@Model.Author</a> @@ @Model.CreatedDate</small>
+<div class="list-group-item">
+    <div class="card-body">
+        <h5 class="card-title">
+            <a asp-page="SubmissionView" asp-route-id="@Model.Id">
+                @Model.Title
+            </a>
+        </h5>
+        <p>
+            <code class="card-text">
+                <strong>Prompt:</strong> @Model.Prompt
+            </code>
+        </p>
+        @if (Model.Tags.Any())
+        {
+            <div class="card-link">
+                @foreach (var tag in Model.Tags)
+                {
+                    <span class="badge badge-secondary">
+                        <a asp-page="Index" asp-route-tag="@tag">@tag</a>
+                    </span>
+                }
+            </div>
+        }
+        <small>Submitted by <a asp-page="ProfileView" asp-route-userId="@Model.Author">@Model.Author</a> @@ @Model.CreatedDate</small>
+    </div>
 </div>

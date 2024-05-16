@@ -48,7 +48,22 @@ public partial class PioneerService
         _blobServiceClient = new BlobServiceClient(connectionString);
         _screenshotContainerClient = _blobServiceClient.GetBlobContainerClient("screenshots");
     }
-    
+        
+    public Product[] GetProducts()
+    {
+        // TODO -- pull those from DB
+        return
+        [
+            new Product { Id = "M365", Label = "Microsoft 365" },
+            new Product { Id = "Excel", Label = "Excel" },
+            new Product { Id = "Loop", Label = "Loop" },
+            new Product { Id = "PowerPoint", Label = "PowerPoint" },
+            new Product { Id = "Teams", Label = "Teams" },
+            new Product { Id = "Whiteboard", Label = "Whiteboard" },
+            new Product { Id = "Word", Label = "Word" }
+        ];
+    }
+
     public async Task<Submission> SaveSubmission(string submitter, Submission submission)
     {
         submission.Id = Guid.NewGuid().ToString();
@@ -56,17 +71,7 @@ public partial class PioneerService
         submission.LastModifiedDate = DateTime.Now;
         submission.Author = submitter;
         
-        // Extract tags from the submission
-        var tags = new List<string>();
-        
-        var tagMatches = TagRegex().Matches(submission.Notes);
-        
-        foreach (Match match in tagMatches)
-        {
-            tags.Add(match.Value);
-        }
-        
-        submission.Tags = tags.ToArray();
+        UpdateSubmissionTags(submission);
         
         await _submissionsContainer.CreateItemAsync(submission);
 
@@ -93,21 +98,6 @@ public partial class PioneerService
         }
 
         return null;
-    }
-    
-    public Product[] GetProducts()
-    {
-        // TODO -- pull those from DB
-        return
-        [
-            new Product { Id = "M365", Label = "Microsoft 365" },
-            new Product { Id = "Excel", Label = "Excel" },
-            new Product { Id = "Loop", Label = "Loop" },
-            new Product { Id = "PowerPoint", Label = "PowerPoint" },
-            new Product { Id = "Teams", Label = "Teams" },
-            new Product { Id = "Whiteboard", Label = "Whiteboard" },
-            new Product { Id = "Word", Label = "Word" }
-        ];
     }
 
     public async Task<List<Submission>> GetLatestSubmissions(int page, int count)
@@ -181,6 +171,30 @@ public partial class PioneerService
         return submissions;
     }
     
+    public async Task UpdateSubmission(Submission submission)
+    {   
+        submission.LastModifiedDate = DateTime.Now;
+        
+        UpdateSubmissionTags(submission);
+
+        await _submissionsContainer.UpsertItemAsync(submission);
+    }
+
+    private static void UpdateSubmissionTags(Submission submission)
+    {
+        // Update tags
+        var tags = new List<string>();
+        
+        var tagMatches = TagRegex().Matches(submission.Notes);
+        
+        foreach (Match match in tagMatches)
+        {
+            tags.Add(match.Value);
+        }
+        
+        submission.Tags = tags.ToArray();
+    }
+
     public string GetProductName(string productId)
     {
         var products = GetProducts();

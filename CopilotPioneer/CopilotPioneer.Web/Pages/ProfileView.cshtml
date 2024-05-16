@@ -6,9 +6,9 @@
 }
 
 <h3>@Model.Profile.GetDisplayName() 
-    @if (User.Identity?.Name == Model.Profile.Name)
+    @if (User.Identity?.Name == Model.Profile.Id)
     {
-        <small><a asp-page="ProfileEdit" class="fa fa-pen"><span></span></a></small>
+        <small><a asp-page="ProfileEdit" class="fa fa-pen"></a></small>
     }
 </h3 >
 

@@ -11,16 +11,20 @@ public class SubmissionView(PioneerService pioneerService) : PageModel
     public PioneerService PioneerService { get; private set; } = pioneerService;
 
     [BindProperty(Name = "id", SupportsGet = true)]
-    public string? Id { get; set; } = null;
+    public string Id { get; set; } = string.Empty;
 
-    public Submission? Submission { get; set; } = null;
+    public Submission Submission { get; set; } = new();
 
     public async Task<IActionResult> OnGet()
     {
-        if (Id != null)
+        var submission = await PioneerService.GetSubmissionById(Id);
+
+        if (submission == null)
         {
-            Submission = await PioneerService.GetSubmissionById(Id);
+            return NotFound();
         }
+
+        Submission = submission;
 
         return Page();
     }
