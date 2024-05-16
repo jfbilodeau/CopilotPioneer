@@ -14,14 +14,14 @@ public class ProfileEdit(PioneerService pioneerService) : PageModel
 
     public async Task<ActionResult> OnGet()
     {
-        var profileId = User.Identity?.Name;
-
-        if (profileId == null)
+        var userId = User.Identity?.Name;
+        
+        if (userId == null)
         {
             return Unauthorized();
         }
-
-        Profile = await pioneerService.GetProfileOrDefault(profileId);
+        
+        Profile = await pioneerService.GetProfileOrDefault(userId);
         
         return Page();
     }
@@ -33,21 +33,24 @@ public class ProfileEdit(PioneerService pioneerService) : PageModel
             return Page();
         }
         
-        var profileId = User.Identity?.Name;
-
-        if (profileId == null)
+        var userId = User.Identity?.Name;
+        
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+        
+        var profile = await pioneerService.GetProfileOrDefault(userId);
+        
+        if (profile.Id != userId)
         {
             return Unauthorized();
         }
 
-        var currentProfile = await pioneerService.GetProfileOrDefault(profileId);
+        profile.Name = Profile.Name;
 
-        currentProfile.Name = Profile?.Name ?? profileId;
+        await pioneerService.UpdateProfile(profile);
 
-        await pioneerService.UpdateProfile(currentProfile);
-
-        Response.Redirect($"/Profile/{profileId}");
-
-        return Page();
+        return RedirectToPage("ProfileView", new { id = userId});
     }
 }

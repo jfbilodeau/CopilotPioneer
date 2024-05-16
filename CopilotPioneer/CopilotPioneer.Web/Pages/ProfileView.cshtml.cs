@@ -7,7 +7,7 @@ namespace CopilotPioneer.Web.Pages;
 
 public class ProfileView(PioneerService pioneerService) : PageModel
 {
-    [BindProperty(Name = "userId", SupportsGet = true)]
+    [BindProperty(Name = "id", SupportsGet = true)]
     public string UserId { get; set; } = string.Empty;
     
     public int PageNumber { get; set; } = 0;
@@ -18,24 +18,24 @@ public class ProfileView(PioneerService pioneerService) : PageModel
 
     public async Task<ActionResult> OnGet()
     {
-        if (UserId == string.Empty )
-        {
-            UserId = User?.Identity?.Name ?? "";
-        
-            if (UserId == string.Empty)
-            {
-                return Unauthorized();
-            }
-        }
-        
         var profile = await pioneerService.GetProfile(UserId);
 
         if (profile == null)
         {
-            return RedirectToPage("ProfileEdit");
+            if (UserId == User.Identity?.Name)
+            {
+                return RedirectToPage("ProfileEdit");
+            }
+            
+            Profile = new Profile
+            {
+                Id = UserId,
+            };
         }
-        
-        Profile = profile;
+        else
+        {
+            Profile = profile;
+        }
         
         Submissions = await pioneerService.GetSubmissionsByFilter(UserId, pageNumber: PageNumber);
 
