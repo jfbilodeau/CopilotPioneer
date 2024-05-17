@@ -1,4 +1,5 @@
-﻿using CopilotPioneer.Web.Services;
+﻿using CopilotPioneer.Web.Models;
+using CopilotPioneer.Web.Services;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace CopilotPioneer.Web.Pages;
@@ -23,7 +24,7 @@ public class Leaderboard(PioneerService _pioneerService) : PageModel
             .Where(p => p.Points > 0)
             .OrderByDescending(p => p.Points)
             .GroupBy(p => p.Points)
-            .SelectMany(r => r.Select((p, i) => new LeaderboardEntry
+            .SelectMany((r, i) => r.Select(p => new LeaderboardEntry
                 {
                     Rank = i + 1,
                     UserId = p.Id,
