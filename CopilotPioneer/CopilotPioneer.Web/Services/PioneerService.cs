@@ -308,4 +308,19 @@ public partial class PioneerService
 
         return false;
     }
+
+    public async Task<List<Profile>> GetProfiles()
+    {
+        var feedIterator = _profileContainer.GetItemQueryIterator<Profile>();
+        
+        var profiles = new List<Profile>();
+        
+        while (feedIterator.HasMoreResults)
+        {
+            var results = await feedIterator.ReadNextAsync();
+            profiles.AddRange(results);
+        }
+        
+        return profiles;
+    }
 }
