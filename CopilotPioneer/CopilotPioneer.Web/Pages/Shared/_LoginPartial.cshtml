@@ -3,7 +3,7 @@
 <ul class="navbar-nav">
     @if (User.Identity?.IsAuthenticated == true)
     {
-        <span class="navbar-text text-dark">@User.Identity?.Name (0 points)</span>
+        <span class="navbar-text text-dark">@User.Identity?.Name (@ViewBag.Profile.Points points)</span>
         <li class="nav-item">
             <a class="nav-link text-dark" asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignOut">Sign out</a>
         </li>

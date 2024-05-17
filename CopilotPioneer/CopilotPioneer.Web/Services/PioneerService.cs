@@ -4,6 +4,7 @@ using CopilotPioneer.Web.Models;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Fluent;
 using Microsoft.Azure.Cosmos.Linq;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CopilotPioneer.Web.Services;
 
@@ -15,31 +16,43 @@ public class Product
 
 public partial class PioneerService
 {
+    // For now, hardcode points here.
+    public const int PointsPerSubmission = 3;
+    public const int PointsPerVote = 1;
+    
+    private readonly IMemoryCache _memoryCache;
+    private readonly ILogger<PioneerService> _logger;
+    
     private readonly Database _cosmosDbDatabase;
     private readonly Container _submissionsContainer;
     private readonly Container _profileContainer;
+    private readonly Container _pointsContainer;
     
     private readonly BlobServiceClient _blobServiceClient;
     private readonly BlobContainerClient _screenshotContainerClient;
-    
+
     [GeneratedRegex(@"#\w+")]
     private static partial Regex TagRegex();
     
-    public PioneerService(IConfiguration configuration)
+    public PioneerService(ILogger<PioneerService> logger, IConfiguration configuration, IMemoryCache memoryCache)
     {
+        _logger = logger;
+        _memoryCache = memoryCache;
+        
         var cosmosDbConnectionString = configuration["CosmosDbConnectionString"];
         var cosmosDbDatabaseName = configuration["CosmosDbDatabaseName"];
 
         var cosmosClient = new CosmosClientBuilder(cosmosDbConnectionString)
             .WithSerializerOptions(new CosmosSerializationOptions
             {
-                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase,
             })
             .Build();
         
         _cosmosDbDatabase = cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDbDatabaseName).Result;
         _submissionsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Submissions", "/author").Result;
         _profileContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Profiles", "/id").Result;
+        _pointsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Points", "/userId").Result;
         
         var blobStorageAccountName = configuration["BlobStorageAccountName"];
         var blobStorageAccountKey = configuration["BlobStorageAccountKey"];
@@ -74,6 +87,12 @@ public partial class PioneerService
         UpdateSubmissionTags(submission);
         
         await _submissionsContainer.CreateItemAsync(submission);
+        
+        // Award points if necessary.
+        if (!await HasVotedToday(submitter))
+        {
+            AwardPoints(submitter,  PointType.Submission, PointsPerSubmission);
+        }
 
         return submission;
     }
@@ -222,6 +241,9 @@ public partial class PioneerService
     public async Task UpdateProfile(Profile profile)
     {
         await _profileContainer.UpsertItemAsync(profile);
+        
+        // Clear cached profile.
+        _memoryCache.Remove($"profile_{profile.Id}");
     }
 
     public async Task<Profile?> GetProfile(string id)
@@ -246,11 +268,44 @@ public partial class PioneerService
         return null;
     }
     
-    public async void AddPoints(string userId, int points)
+    public async void AwardPoints(string userId, PointType type, int points)
     {
         var profile = await GetProfileOrDefault(userId);
         profile.Points += points;
         
         await UpdateProfile(profile);
+        
+        var point = new Point
+        {
+            Id = Guid.NewGuid().ToString(),
+            UserId = userId,
+            Type = type,
+            Amount = points,
+        };
+        
+        await _pointsContainer.CreateItemAsync(point);
+    }
+
+    private async Task<bool> HasVotedToday(string userId)
+    {
+        var sql = "SELECT * FROM Points p where p.userId = @userId and p.dateCreated >= @dateCreated";
+        
+        var query = new QueryDefinition(sql)
+            .WithParameter("@userId", userId)
+            .WithParameter("@dateCreated", DateTime.Today);
+        
+        var feedIterator = _pointsContainer.GetItemQueryIterator<Point>(query);
+        
+        while (feedIterator.HasMoreResults)
+        {
+            var points = await feedIterator.ReadNextAsync();
+            
+            if (points.Count != 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

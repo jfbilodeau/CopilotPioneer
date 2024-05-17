@@ -1,3 +1,22 @@
-﻿@{
+﻿@using CopilotPioneer.Web.Models
+@using CopilotPioneer.Web.Services
+@using Microsoft.Extensions.Caching.Memory
+@inject PioneerService PioneerService
+@inject IMemoryCache MemoryCache
+
+@{
+    var userId = User.Identity?.Name ?? "";
+    
+    var profile = MemoryCache.Get<Profile>($"profile_{userId}");
+
+    if (profile == null)
+    {
+        profile = await PioneerService.GetProfileOrDefault(userId);
+        
+        MemoryCache.Set("profile", profile);
+    }
+
+    ViewBag.Profile = profile;
+
     Layout = "_Layout";
 }

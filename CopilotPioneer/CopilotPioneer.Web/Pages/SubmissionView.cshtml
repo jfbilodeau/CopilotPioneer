@@ -47,6 +47,6 @@
     }
 
     <p>
-        <small>@Model.Submission.Author @@ @Model.Submission.CreatedDate</small>
+        <small>Submitted by <a asp-page="ProfileView" asp-route-id="@Model.Submission.Author">@Model.Submission.Author</a> @@ @Model.Submission.CreatedDate</small>
     </p>
 </div>
