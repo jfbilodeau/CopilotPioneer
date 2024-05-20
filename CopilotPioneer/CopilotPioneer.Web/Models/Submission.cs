@@ -21,5 +21,8 @@ public sealed class Submission
     
     public string[] Tags { get; set; } = [];
     
+    public int DailyVotes { get; set; } = 0;
+    public int WeeklyVotes { get; set; } = 0;
+    
     public string[] ScreenshotUrl { get; set; } = [];
 }

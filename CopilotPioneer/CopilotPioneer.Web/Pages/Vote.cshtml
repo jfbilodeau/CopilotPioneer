@@ -1,4 +1,5 @@
 ﻿@page
+@using Microsoft.IdentityModel.Tokens
 @model CopilotPioneer.Web.Pages.Vote
 
 @{
@@ -6,6 +7,39 @@
 }
 
 <div>
-    <h3>Vote</h3>
-    <p>No available yet...</p>
+    <h1>Weekly Vote</h1>
+    
+    @if (Model.WeeklyVoteCast)
+    {
+        <p>You have already voted. Thank you! ❤️</p>
+    }
+    else
+    {
+        <h3>Vote for your favourite prompt:</h3>
+        @if (Model.WeeklySubmissions.IsNullOrEmpty())
+        {
+            <p>There were no submissions last week 😱</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var submission in Model.WeeklySubmissions)
+                {
+                    <li>
+                        <h4>@submission.Title</h4>
+                        <p>@submission.Prompt</p>
+                        <p>Submitted by <a asp-page="ProfileView" asp-route-id="@submission.Author">@submission.Author</a> on @submission.CreatedDate</p>
+                        <form method="post">
+                            <input type="hidden" name="submissionId" value="@submission.Id"/>
+                            <button type="submit" asp-page-handler="CastWeeklyVote" class="btn btn-primary">Vote</button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        }
+    }
+    
+    <p>
+        <a asp-page="Leaderboard">Visit leaderboard</a>
+    </p>
 </div>
