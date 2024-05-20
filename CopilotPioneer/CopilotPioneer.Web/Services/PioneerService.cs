@@ -18,8 +18,10 @@ public partial class PioneerService
 {
     // For now, hardcode points here.
     public const int PointsPerSubmission = 3;
-    public const int PointsPerDailyVote = 1;
-    public const int PointsPerWeeklyVote = 2;
+    public const int PointsPerDailyVoteReceived = 1;
+    public const int PointsPerDailyVoteCast = 1;
+    public const int PointsPerWeeklyVoteCast = 2;
+    public const int PointsPerWeeklyVoteReceived = 2;
 
     private readonly IMemoryCache _memoryCache;
     private readonly ILogger<PioneerService> _logger;
@@ -518,7 +520,8 @@ public partial class PioneerService
 
             await UpdateSubmission(submission);
 
-            await AwardPoints(userId, PointType.WeeklyVote, PointsPerWeeklyVote, GetPreviousWeekStartDate().ToString("s"));
+            await AwardPoints(userId, PointType.WeeklyVote, PointsPerWeeklyVoteCast, GetPreviousWeekStartDate().ToString("s"));
+            await AwardPoints(submission.Author, PointType.WeeklyVote, PointsPerWeeklyVoteReceived, GetPreviousWeekStartDate().ToString("s"));
         }
     }
 }
