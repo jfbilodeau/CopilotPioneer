@@ -93,7 +93,7 @@ public partial class PioneerService
         // Award points if necessary.
         if (!await HasSubmittedToday(submitter))
         {
-            AwardPoints(submitter, PointType.Submission, PointsPerSubmission);
+            AwardPoints(submitter, PointType.Submission,  PointsPerSubmission);
         }
 
         return submission;
@@ -237,7 +237,7 @@ public partial class PioneerService
         return await GetProfile(id) ?? new Profile
         {
             Id = id,
-            Points = 10,
+            Points = 0,
         };
     }
 
