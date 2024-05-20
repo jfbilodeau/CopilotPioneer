@@ -500,7 +500,8 @@ public partial class PioneerService
 
             await UpdateSubmission(submission);
 
-            AwardPoints(userId, PointType.WeeklyVote, PointsPerWeeklyVote);
+            await AwardPoints(userId, PointType.WeeklyVote, PointsPerDailyVoteCast, GetPreviousWeekStartDate().ToString("s"));
+            await AwardPoints(submission.Author, PointType.WeeklyVote, PointsPerDailyVoteReceived, GetPreviousWeekStartDate().ToString("s"));
         }
     }
 
