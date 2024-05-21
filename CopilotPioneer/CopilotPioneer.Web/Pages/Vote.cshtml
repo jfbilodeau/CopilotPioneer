@@ -20,6 +20,10 @@
         {
             <p>There were no submissions last week 😱</p>
         }
+        else if (Model.WeeklySubmissions.Count == 1)
+        {
+            <p>There were not enough submissions last week 😢</p>
+        }
         else
         {
             <ul>
@@ -37,8 +41,45 @@
                 }
             </ul>
         }
+    
+        <hr/>
     }
     
+    <h1>Daily Vote</h1>
+    
+    @if (Model.DailyVoteCast)
+    {
+        <p>You have already voted. Thank you! ❤️</p>
+    }
+    else
+    {
+        @if (Model.DailySubmissions.IsNullOrEmpty())
+        {
+            <p>There were no submissions yesterday 😱</p>
+        }
+        else if (Model.DailySubmissions.Count == 1)
+        {
+            <p>There were not enough submissions yesterday 😢</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var submission in Model.DailySubmissions)
+                {
+                    <li>
+                        <h4>@submission.Title</h4>
+                        <p>@submission.Prompt</p>
+                        <p>Submitted by <a asp-page="ProfileView" asp-route-id="@submission.Author">@submission.Author</a> on @submission.CreatedDate</p>
+                        <form method="post">
+                            <input type="hidden" name="submissionId" value="@submission.Id"/>
+                            <button type="submit" asp-page-handler="CastDailyVote" class="btn btn-primary">Vote</button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        }
+    }
+
     <p>
         <a asp-page="Leaderboard">Visit leaderboard</a>
     </p>

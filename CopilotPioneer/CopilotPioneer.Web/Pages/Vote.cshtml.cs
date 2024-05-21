@@ -47,4 +47,18 @@ public class Vote(PioneerService pioneerService) : PageModel
 
         return RedirectToPage();
     }
+
+    public async Task<ActionResult> OnPostCastDailyVoteAsync()
+    {
+        var userId = User.Identity?.Name;
+
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        await PioneerService.CastDailyVote(userId, SubmissionId);
+
+        return RedirectToPage();
+    }
 }
