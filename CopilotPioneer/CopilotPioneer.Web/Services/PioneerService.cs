@@ -497,7 +497,7 @@ public partial class PioneerService
                 return;
             }
 
-            submission.WeeklyVotes++;
+            submission.DailyVotes++;
 
             await UpdateSubmission(submission);
 
