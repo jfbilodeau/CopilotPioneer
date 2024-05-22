@@ -49,4 +49,34 @@
     <p>
         <small>Submitted by <a asp-page="ProfileView" asp-route-id="@Model.Submission.Author">@Model.Submission.Author</a> @@ @Model.Submission.CreatedDate</small>
     </p>
+
+    @if (Model.Submission.Comments.Length > 0)
+    {
+        <h3 id="comments">Comments (@Model.Submission.Comments.Length)</h3>
+        <div class="list-group">
+            @foreach (var comment in Model.Submission.Comments)
+            {
+                <p>
+                    @comment.Content<br/>
+                    <small id="@comment.Id">
+                        - @comment.Author @@ @comment.CreatedDate
+                        <a href="#@comment.Id">
+                            <i class="fas fa-link"></i>
+                        </a>
+                    </small>
+                </p>
+            }
+        </div>
+    }
+
+    <h3>Add your comment:</h3>
+    <form method="post">
+        <input type="hidden" asp-for="SubmissionId" value="@Model.Submission.Id"/>
+        <label asp-for="Comment.Content" class="col-sm-2 col-form-label"></label>
+        <br/>
+        <div class="col-sm-10">
+            <textarea asp-for="Comment.Content" class="form-control" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" asp-page-handler="Comment">Submit</button>
+    </form>
 </div>

@@ -30,6 +30,7 @@ public partial class PioneerService
     private readonly Container _submissionsContainer;
     private readonly Container _profileContainer;
     private readonly Container _pointsContainer;
+    private readonly Container _commentsContainer;
 
     private readonly BlobServiceClient _blobServiceClient;
     private readonly BlobContainerClient _screenshotContainerClient;
@@ -56,6 +57,7 @@ public partial class PioneerService
         _submissionsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Submissions", "/author").Result;
         _profileContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Profiles", "/id").Result;
         _pointsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Points", "/userId").Result;
+        _commentsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Comments", "/id").Result;
 
         var blobStorageAccountName = configuration["BlobStorageAccountName"];
         var blobStorageAccountKey = configuration["BlobStorageAccountKey"];
@@ -81,21 +83,20 @@ public partial class PioneerService
         ];
     }
 
-    public async Task<Submission> SaveSubmission(string submitter, Submission submission)
+    public async Task<Submission> CreateSubmission(Submission submission)
     {
         submission.Id = Guid.NewGuid().ToString();
         submission.CreatedDate = DateTime.Now;
         submission.LastModifiedDate = DateTime.Now;
-        submission.Author = submitter;
 
         UpdateSubmissionTags(submission);
 
         await _submissionsContainer.CreateItemAsync(submission);
 
         // Award points if necessary.
-        if (!await HasSubmittedToday(submitter))
+        if (!await HasSubmittedToday(submission.Author))
         {
-            AwardPoints(submitter, PointType.Submission,  PointsPerSubmission);
+            await AwardPoints(submission.Author, PointType.Submission,  PointsPerSubmission);
         }
 
         return submission;
@@ -108,7 +109,7 @@ public partial class PioneerService
         var query = new QueryDefinition(sql)
             .WithParameter("@submissionId", submissionId);
 
-        var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
+        using var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
 
         while (feedIterator.HasMoreResults)
         {
@@ -131,7 +132,7 @@ public partial class PioneerService
             .WithParameter("@offset", page * count)
             .WithParameter("@limit", count);
 
-        var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
+        using var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
 
         var submissions = new List<Submission>();
 
@@ -184,7 +185,7 @@ public partial class PioneerService
 
         query = query.Skip(pageNumber * pageSize).Take(pageSize);
 
-        var feedIterator = query.ToFeedIterator();
+        using var feedIterator = query.ToFeedIterator();
 
         var submissions = new List<Submission>();
 
@@ -258,7 +259,7 @@ public partial class PioneerService
         var query = new QueryDefinition(sql)
             .WithParameter("@id", id);
 
-        var feedIterator = _profileContainer.GetItemQueryIterator<Profile>(query);
+        using var feedIterator = _profileContainer.GetItemQueryIterator<Profile>(query);
 
         while (feedIterator.HasMoreResults)
         {
@@ -302,7 +303,7 @@ public partial class PioneerService
             .WithParameter("@userId", userId)
             .WithParameter("@dateCreated", DateTime.Today);
 
-        var feedIterator = _pointsContainer.GetItemQueryIterator<Point>(query);
+        using var feedIterator = _pointsContainer.GetItemQueryIterator<Point>(query);
 
         while (feedIterator.HasMoreResults)
         {
@@ -362,7 +363,7 @@ public partial class PioneerService
             .WithParameter("@type", type.ToString())
             .WithParameter("@frame", frame);
 
-        var feedIterator = _pointsContainer.GetItemQueryIterator<Point>(query);
+        using var feedIterator = _pointsContainer.GetItemQueryIterator<Point>(query);
 
         while (feedIterator.HasMoreResults)
         {
@@ -398,7 +399,7 @@ public partial class PioneerService
 
     public async Task<List<Profile>> GetProfiles()
     {
-        var feedIterator = _profileContainer.GetItemQueryIterator<Profile>();
+        using var feedIterator = _profileContainer.GetItemQueryIterator<Profile>();
 
         var profiles = new List<Profile>();
 
@@ -419,7 +420,7 @@ public partial class PioneerService
             .WithParameter("@startOfWeek", GetPreviousWeekStartDate())
             .WithParameter("@endOfWeek", GetWeekStartDate());
 
-        var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
+        using var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
 
         var submissions = new List<Submission>();
 
@@ -445,7 +446,7 @@ public partial class PioneerService
             .WithParameter("@yesterday", GetPreviousDayStartDate())
             .WithParameter("@today", DateTime.Today);
 
-        var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
+        using var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
 
         var submissions = new List<Submission>();
 
@@ -524,5 +525,25 @@ public partial class PioneerService
             await AwardPoints(userId, PointType.WeeklyVote, PointsPerWeeklyVoteCast, GetPreviousWeekStartDate().ToString("s"));
             await AwardPoints(submission.Author, PointType.WeeklyVote, PointsPerWeeklyVoteReceived, GetPreviousWeekStartDate().ToString("s"));
         }
+    }
+    
+    public async Task<string> AddCommentToSubmission(string submissionId, Comment comment)
+    {
+        var submission = await GetSubmissionById(submissionId);
+
+        if (submission == null)
+        {
+            // Ignore
+            return "";
+        }
+        
+        comment.Id = Guid.NewGuid().ToString();
+        comment.CreatedDate = DateTime.Now;
+
+        submission.Comments = [..submission.Comments, comment];
+
+        await UpdateSubmission(submission);
+
+        return comment.Id;
     }
 }

@@ -27,8 +27,10 @@ public class SubmissionCreate(PioneerService pioneerService) : PageModel
         {
             return Unauthorized();
         }
+
+        Submission.Author = User.Identity.Name;
         
-        var result = await PioneerService.SaveSubmission(User.Identity.Name, Submission);
+        var result = await PioneerService.CreateSubmission(Submission);
 
         return RedirectToPage("SubmissionView", new { id = result.Id });
     }

@@ -24,5 +24,14 @@
             </div>
         }
         <small>Submitted by <a asp-page="ProfileView" asp-route-id="@Model.Author">@Model.Author</a> @@ @Model.CreatedDate</small>
+        <br/>
+        <small>
+            @if (Model.Comments.Length > 0)
+            {
+                <a asp-page="SubmissionView" asp-route-id="@Model.Id" asp-fragment="comments">
+                    Comments (@Model.Comments.Length)
+                </a>
+            }
+        </small>
     </div>
 </div>
