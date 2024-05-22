@@ -22,5 +22,8 @@ public class Point
     // For example, this would be the date of the daily vote or the week of the weekly vote.
     // (Not the datetime the point was awarded.)
     public string Frame { get; set; } = string.Empty;
+    
+    // The item of the id (submission, etc) associated with this point.
+    public string TagId { get; set; } = string.Empty;
     public int Amount { get; set; } = 0;
 }

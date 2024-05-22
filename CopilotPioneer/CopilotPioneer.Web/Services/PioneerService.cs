@@ -96,7 +96,7 @@ public partial class PioneerService
         // Award points if necessary.
         if (!await HasSubmittedToday(submission.Author))
         {
-            await AwardPoints(submission.Author, PointType.Submission,  PointsPerSubmission);
+            await AwardPoints(submission.Author, PointType.Submission,  PointsPerSubmission, submission.Id);
         }
 
         return submission;
@@ -274,7 +274,7 @@ public partial class PioneerService
         return null;
     }
 
-    public async Task<Point> AwardPoints(string userId, PointType type, int points, string frame = "")
+    public async Task<Point> AwardPoints(string userId, PointType type, int points, string frame = "", string tagId = "")
     {
         var profile = await GetProfileOrDefault(userId);
         profile.Points += points;
@@ -288,6 +288,7 @@ public partial class PioneerService
             Type = type,
             Amount = points,
             Frame = frame,
+            TagId = tagId,
         };
 
         await _pointsContainer.CreateItemAsync(point);
@@ -353,7 +354,7 @@ public partial class PioneerService
         return GetWeekStartDate() - TimeSpan.FromDays(7);
     }
 
-    public async Task<bool> PointsAwarded(string userId, PointType type, string frame)
+    public async Task<Point?> GetPoint(string userId, PointType type, string frame)
     {
         var sql =
             "SELECT p FROM Points p where p.userId = @userId and p.type = @type and p.frame = @frame";
@@ -368,33 +369,29 @@ public partial class PioneerService
         while (feedIterator.HasMoreResults)
         {
             var points = await feedIterator.ReadNextAsync();
-
-            if (points.Any())
+            
+            foreach (var point in points)
             {
-                return true;
+                return point;
             }
-            // if (points.Count != 0)
-            // {
-            //     return true;
-            // }
         }
 
-        return false;
+        return null;
     }
 
-    public async Task<bool> PointsAwarded(string userId, PointType type, DateTime frame)
+    public async Task<Point?> GetPoint(string userId, PointType type, DateTime frame)
     {
-        return await PointsAwarded(userId, type, frame.ToString("s"));
+        return await GetPoint(userId, type, frame.ToString("s"));
     }
 
     public async Task<bool> HasSubmittedDailyVote(string userId)
     {
-        return await PointsAwarded(userId, PointType.DailyVote, GetPreviousDayStartDate());
+        return await GetPoint(userId, PointType.DailyVote, GetPreviousDayStartDate()) != null;
     }
 
     public async Task<bool> HasSubmittedWeeklyVote(string userId)
     {
-        return await PointsAwarded(userId, PointType.WeeklyVote, GetPreviousWeekStartDate());
+        return await GetPoint(userId, PointType.WeeklyVote, GetPreviousWeekStartDate()) != null;
     }
 
     public async Task<List<Profile>> GetProfiles()
@@ -501,8 +498,8 @@ public partial class PioneerService
 
             await UpdateSubmission(submission);
 
-            await AwardPoints(userId, PointType.DailyVote, PointsPerDailyVoteCast, GetPreviousDayStartDate().ToString("s"));
-            await AwardPoints(submission.Author, PointType.DailyVote, PointsPerDailyVoteReceived, GetPreviousDayStartDate().ToString("s"));
+            await AwardPoints(userId, PointType.DailyVote, PointsPerDailyVoteCast, GetPreviousDayStartDate().ToString("s"), submissionId);
+            await AwardPoints(submission.Author, PointType.DailyVote, PointsPerDailyVoteReceived, GetPreviousDayStartDate().ToString("s"), submissionId);
         }
     }
 
@@ -522,8 +519,8 @@ public partial class PioneerService
 
             await UpdateSubmission(submission);
 
-            await AwardPoints(userId, PointType.WeeklyVote, PointsPerWeeklyVoteCast, GetPreviousWeekStartDate().ToString("s"));
-            await AwardPoints(submission.Author, PointType.WeeklyVote, PointsPerWeeklyVoteReceived, GetPreviousWeekStartDate().ToString("s"));
+            await AwardPoints(userId, PointType.WeeklyVote, PointsPerWeeklyVoteCast, GetPreviousWeekStartDate().ToString("s"), submissionId);
+            await AwardPoints(submission.Author, PointType.WeeklyVote, PointsPerWeeklyVoteReceived, GetPreviousWeekStartDate().ToString("s"), submissionId);
         }
     }
     
