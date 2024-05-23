@@ -24,7 +24,7 @@ public sealed class Submission
     public int DailyVotes { get; set; } = 0;
     public int WeeklyVotes { get; set; } = 0;
     
-    public string[] ScreenshotUrl { get; set; } = [];
+    public Screenshot[] Screenshots { get; set; } = [];
     
     public Comment[] Comments { get; set; } = [];
 }

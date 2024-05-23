@@ -1,10 +1,13 @@
 ﻿using System.Text.RegularExpressions;
 using Azure.Storage.Blobs;
 using CopilotPioneer.Web.Models;
+using CopilotPioneer.Web.Pages;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Fluent;
 using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Extensions.Caching.Memory;
+using SkiaSharp;
+using Point = CopilotPioneer.Web.Models.Point;
 
 namespace CopilotPioneer.Web.Services;
 
@@ -22,6 +25,11 @@ public partial class PioneerService
     public const int PointsPerDailyVoteCast = 1;
     public const int PointsPerWeeklyVoteCast = 2;
     public const int PointsPerWeeklyVoteReceived = 2;
+    
+    // Screenshot size names
+    public const string ScreenShotSizeOriginal = "original";
+    public const string ScreenShotSizeHero = "hero";
+    public const string ScreenShotSizeThumbnail = "thumbnail";
 
     private readonly IMemoryCache _memoryCache;
     private readonly ILogger<PioneerService> _logger;
@@ -66,6 +74,7 @@ public partial class PioneerService
             $"DefaultEndpointsProtocol=https;AccountName={blobStorageAccountName};AccountKey={blobStorageAccountKey};EndpointSuffix=core.windows.net";
         _blobServiceClient = new BlobServiceClient(connectionString);
         _screenshotContainerClient = _blobServiceClient.GetBlobContainerClient("screenshots");
+        _screenshotContainerClient.CreateIfNotExists();
     }
 
     public Product[] GetProducts()
@@ -83,13 +92,122 @@ public partial class PioneerService
         ];
     }
 
-    public async Task<Submission> CreateSubmission(Submission submission)
+    private SKImage ResizeImage(SKImage image, int targetWidth, int targetHeight)
+    {
+        var width = image.Width;
+        var height = image.Height;
+        
+        var aspectRatio = (float)width / height;
+        
+        var targetAspectRatio = (float)targetWidth / targetHeight;
+        
+        var scale = aspectRatio > targetAspectRatio
+            ? (float)targetWidth / width
+            : (float)targetHeight / height;
+        
+        var scaledWidth = (int)(width * scale);
+        var scaledHeight = (int)(height * scale);
+        
+        var targetImageInfo = new SKImageInfo(scaledWidth, scaledHeight);
+        using var surface = SKSurface.Create(targetImageInfo);
+        
+        var canvas = surface.Canvas;
+        
+        canvas.Clear(SKColors.Transparent);
+        
+        canvas.Scale(scale);
+        
+        canvas.DrawImage(image, 0, 0);
+        
+        canvas.Flush();
+
+        var targetImage = surface.Snapshot();
+
+        return targetImage;
+    }
+
+    private async Task<Screenshot> CreateScreenshot(string submissionId, ScreenShotSubmission screenShotSubmission)
+    {
+        var screenshotId = Guid.NewGuid().ToString();
+        
+        var screenshot = new Screenshot
+        {
+            Id = screenshotId,
+            SubmissionId = submissionId,
+            AltText = screenShotSubmission.AltText,
+            OriginalName = $"submissions/{submissionId}/{screenshotId}/{ScreenShotSizeOriginal}.png",
+            HeroName = $"submissions/{submissionId}/{screenshotId}/{ScreenShotSizeHero}.png",
+            ThumbnailName = $"submissions/{submissionId}/{screenshotId}/{ScreenShotSizeThumbnail}.png",
+        };
+        
+        // Resize image to hero and thumbnail sizes
+        using var image = SKImage.FromEncodedData(screenShotSubmission.File!.OpenReadStream());
+        using var heroImage = ResizeImage(image, 400, 400);
+        using var thumbnailImage = ResizeImage(image, 100, 100);
+
+        // Save images
+        var fullSizeBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.OriginalName);
+        await fullSizeBlobClient.UploadAsync(image.Encode().AsStream(), true);
+        
+        var heroBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.HeroName);
+        await heroBlobClient.UploadAsync(heroImage.Encode().AsStream(), true);
+        
+        var thumbnailBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.ThumbnailName);
+        await thumbnailBlobClient.UploadAsync(thumbnailImage.Encode().AsStream(), true);
+
+        return screenshot;
+    }
+    
+    public async Task<Stream?> GetScreenshot(string submissionId, string screenshotId, string size)
+    {
+        var submission = await GetSubmissionById(submissionId);
+
+        var screenshot = submission?.Screenshots.FirstOrDefault(s => s.Id == screenshotId);
+
+        if (screenshot == null)
+        {
+            return null;
+        }
+
+        string path;
+
+        switch (size)
+        {
+            case ScreenShotSizeOriginal:
+                path = screenshot.OriginalName;
+                break;
+            
+            case ScreenShotSizeHero:
+                path = screenshot.HeroName;
+                break;
+            
+            case ScreenShotSizeThumbnail:
+                path = screenshot.ThumbnailName;
+                break;
+            
+            default:
+                return null;
+        }
+            
+        var blobClient = _screenshotContainerClient.GetBlobClient(path);
+        var stream = await blobClient.OpenReadAsync();
+
+        return stream;
+    }
+
+    public async Task<Submission> CreateSubmission(Submission submission, ScreenShotSubmission[] screenshots)
     {
         submission.Id = Guid.NewGuid().ToString();
         submission.CreatedDate = DateTime.Now;
         submission.LastModifiedDate = DateTime.Now;
 
         UpdateSubmissionTags(submission);
+
+        foreach (var screenshot in screenshots)
+        {
+            var screenshotModel = await CreateScreenshot(submission.Id, screenshot);
+            submission.Screenshots = [..submission.Screenshots, screenshotModel];
+        }
 
         await _submissionsContainer.CreateItemAsync(submission);
 

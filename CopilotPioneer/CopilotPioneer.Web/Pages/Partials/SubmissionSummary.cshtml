@@ -23,6 +23,19 @@
                 }
             </div>
         }
+        
+        @if (Model.Screenshots.Length > 0)
+        {
+            <div class="card-link">
+                @foreach (var screenshot in Model.Screenshots)
+                {
+                    <a asp-page="ScreenshotView" asp-route-submissionId="@screenshot.SubmissionId" asp-route-screenshotId="@screenshot.Id" asp-route-size="original">
+                        <img src="/ScreenshotView/@screenshot.SubmissionId/@screenshot.Id/thumbnail" class="img-thumbnail" alt="@screenshot.AltText"/>
+                    </a>
+                }
+            </div>
+        }
+
         <small>Submitted by <a asp-page="ProfileView" asp-route-id="@Model.Author">@Model.Author</a> @@ @Model.CreatedDate</small>
         <br/>
         <small>
