@@ -51,11 +51,11 @@ public class SubmissionCreate(PioneerService pioneerService) : PageModel
 
         Submission.Author = User.Identity.Name;
         
-        var screenshots = new ScreenShotSubmission?[] {
+        var screenshots = new ScreenShotSubmission[] {
             Screenshot1,
             Screenshot2,
             Screenshot3,
-        }.Where(s => s != null).Select(s => s!).ToArray();
+        }.Where(s => s.File != null).Select(s => s!).ToArray();
         
         var result = await PioneerService.CreateSubmission(Submission, screenshots);
 
