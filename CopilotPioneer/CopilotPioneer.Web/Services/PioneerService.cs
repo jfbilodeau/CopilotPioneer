@@ -112,12 +112,12 @@ public partial class PioneerService
         using var surface = SKSurface.Create(targetImageInfo);
         
         var canvas = surface.Canvas;
-        
+
         canvas.Clear(SKColors.Transparent);
         
         canvas.Scale(scale);
         
-        canvas.DrawImage(image, 0, 0);
+        canvas.DrawImage(image, 0, 0, new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = true});
         
         canvas.Flush();
 
@@ -134,7 +134,7 @@ public partial class PioneerService
         {
             Id = screenshotId,
             SubmissionId = submissionId,
-            AltText = screenShotSubmission.AltText,
+            AltText = screenShotSubmission.AltText ?? string.Empty,
             OriginalName = $"submissions/{submissionId}/{screenshotId}/{ScreenShotSizeOriginal}.png",
             HeroName = $"submissions/{submissionId}/{screenshotId}/{ScreenShotSizeHero}.png",
             ThumbnailName = $"submissions/{submissionId}/{screenshotId}/{ScreenShotSizeThumbnail}.png",

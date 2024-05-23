@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices;
 using CopilotPioneer.Web.Models;
 using CopilotPioneer.Web.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +13,8 @@ public class ScreenShotSubmission
     [Display(Name = "Screenshot")]
     public IFormFile? File { get; set; }
     [Display(Name = "Description (Alt text)")]
-    public string AltText { get; set; } = string.Empty;
+    
+    public string? AltText { get; set; } = string.Empty;
 }
 
 public class SubmissionCreate(PioneerService pioneerService) : PageModel
