@@ -20,27 +20,24 @@ public class Product
 public partial class PioneerService
 {
     // For now, hardcode points here.
-    public const int PointsPerSubmission = 3;
-    public const int PointsPerDailyVoteReceived = 1;
-    public const int PointsPerDailyVoteCast = 1;
-    public const int PointsPerWeeklyVoteCast = 2;
-    public const int PointsPerWeeklyVoteReceived = 2;
+    private const int PointsPerSubmission = 3;
+    private const int PointsPerDailyVoteReceived = 1;
+    private const int PointsPerDailyVoteCast = 1;
+    private const int PointsPerWeeklyVoteCast = 2;
+    private const int PointsPerWeeklyVoteReceived = 2;
     
     // Screenshot size names
-    public const string ScreenShotSizeOriginal = "original";
-    public const string ScreenShotSizeHero = "hero";
-    public const string ScreenShotSizeThumbnail = "thumbnail";
+    private const string ScreenShotSizeOriginal = "original";
+    private const string ScreenShotSizeHero = "hero";
+    private const string ScreenShotSizeThumbnail = "thumbnail";
 
     private readonly IMemoryCache _memoryCache;
     private readonly ILogger<PioneerService> _logger;
 
-    private readonly Database _cosmosDbDatabase;
     private readonly Container _submissionsContainer;
     private readonly Container _profileContainer;
     private readonly Container _pointsContainer;
-    private readonly Container _commentsContainer;
 
-    private readonly BlobServiceClient _blobServiceClient;
     private readonly BlobContainerClient _screenshotContainerClient;
 
     [GeneratedRegex(@"#\w+")]
@@ -61,19 +58,18 @@ public partial class PioneerService
             })
             .Build();
 
-        _cosmosDbDatabase = cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDbDatabaseName).Result;
-        _submissionsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Submissions", "/author").Result;
-        _profileContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Profiles", "/id").Result;
-        _pointsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Points", "/userId").Result;
-        _commentsContainer = _cosmosDbDatabase.CreateContainerIfNotExistsAsync("Comments", "/id").Result;
+        Database cosmosDbDatabase = cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDbDatabaseName).Result;
+        _submissionsContainer = cosmosDbDatabase.CreateContainerIfNotExistsAsync("Submissions", "/author").Result;
+        _profileContainer = cosmosDbDatabase.CreateContainerIfNotExistsAsync("Profiles", "/id").Result;
+        _pointsContainer = cosmosDbDatabase.CreateContainerIfNotExistsAsync("Points", "/userId").Result;
 
         var blobStorageAccountName = configuration["BlobStorageAccountName"];
         var blobStorageAccountKey = configuration["BlobStorageAccountKey"];
 
         var connectionString =
             $"DefaultEndpointsProtocol=https;AccountName={blobStorageAccountName};AccountKey={blobStorageAccountKey};EndpointSuffix=core.windows.net";
-        _blobServiceClient = new BlobServiceClient(connectionString);
-        _screenshotContainerClient = _blobServiceClient.GetBlobContainerClient("screenshots");
+        var blobServiceClient = new BlobServiceClient(connectionString);
+        _screenshotContainerClient = blobServiceClient.GetBlobContainerClient("screenshots");
         _screenshotContainerClient.CreateIfNotExists();
     }
 
@@ -126,7 +122,7 @@ public partial class PioneerService
         return targetImage;
     }
 
-    private async Task<Screenshot> CreateScreenshot(string submissionId, ScreenShotSubmission screenShotSubmission)
+    private async Task<Screenshot> CreateScreenshot(string submissionId, ScreenshotSubmissionModel screenshotSubmissionModel)
     {
         var screenshotId = Guid.NewGuid().ToString();
         
@@ -134,14 +130,14 @@ public partial class PioneerService
         {
             Id = screenshotId,
             SubmissionId = submissionId,
-            AltText = screenShotSubmission.AltText ?? string.Empty,
+            AltText = screenshotSubmissionModel.AltText ?? string.Empty,
             OriginalName = $"submissions/{submissionId}/{screenshotId}/{ScreenShotSizeOriginal}.png",
             HeroName = $"submissions/{submissionId}/{screenshotId}/{ScreenShotSizeHero}.png",
             ThumbnailName = $"submissions/{submissionId}/{screenshotId}/{ScreenShotSizeThumbnail}.png",
         };
         
         // Resize image to hero and thumbnail sizes
-        using var image = SKImage.FromEncodedData(screenShotSubmission.File!.OpenReadStream());
+        using var image = SKImage.FromEncodedData(screenshotSubmissionModel.File!.OpenReadStream());
         using var heroImage = ResizeImage(image, 400, 400);
         using var thumbnailImage = ResizeImage(image, 100, 100);
 
@@ -195,7 +191,7 @@ public partial class PioneerService
         return stream;
     }
 
-    public async Task<Submission> CreateSubmission(Submission submission, ScreenShotSubmission[] screenshots)
+    public async Task<Submission> CreateSubmission(Submission submission, ScreenshotSubmissionModel[] screenshots)
     {
         submission.Id = Guid.NewGuid().ToString();
         submission.CreatedDate = DateTime.Now;
@@ -527,13 +523,14 @@ public partial class PioneerService
         return profiles;
     }
 
-    public async Task<List<Submission>> GetWeeklyVoteCandidateSubmission()
+    public async Task<List<Submission>> GetWeeklyVoteCandidateSubmission(string userIdToExclude)
     {
-        var sql = "SELECT * FROM Submissions s where s.createdDate >= @startOfWeek and s.createdDate < @endOfWeek";
+        var sql = "SELECT * FROM Submissions s where s.createdDate >= @startOfWeek and s.createdDate < @endOfWeek and s.author != @userIdToExclude";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@startOfWeek", GetPreviousWeekStartDate())
-            .WithParameter("@endOfWeek", GetWeekStartDate());
+            .WithParameter("@endOfWeek", GetWeekStartDate())
+            .WithParameter("@userIdToExclude", userIdToExclude);
 
         using var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
 
@@ -553,13 +550,14 @@ public partial class PioneerService
         return submissionsArray.ToList();
     }
 
-    public async Task<List<Submission>> GetDailyVoteCandidateSubmission()
+    public async Task<List<Submission>> GetDailyVoteCandidateSubmission(string userIdToExclude)
     {
-        var sql = "SELECT * FROM Submissions s where s.createdDate >= @yesterday and s.createdDate < @today";
+        var sql = "SELECT * FROM Submissions s where s.createdDate >= @yesterday and s.createdDate < @today and s.author != @userIdToExclude";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@yesterday", GetPreviousDayStartDate())
-            .WithParameter("@today", DateTime.Today);
+            .WithParameter("@today", DateTime.Today)
+            .WithParameter("@userIdToExclude", userIdToExclude);
 
         using var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
 
@@ -589,12 +587,12 @@ public partial class PioneerService
 
         if (!candidate.DailyVoteCast)
         {
-            candidate.DailySubmissions = await GetDailyVoteCandidateSubmission();
+            candidate.DailySubmissions = await GetDailyVoteCandidateSubmission(userId);
         }
 
         if (!candidate.WeeklyVoteCast)
         {
-            candidate.WeeklySubmissions = await GetWeeklyVoteCandidateSubmission();
+            candidate.WeeklySubmissions = await GetWeeklyVoteCandidateSubmission(userId);
         }
 
         return candidate;
@@ -617,7 +615,7 @@ public partial class PioneerService
             await UpdateSubmission(submission);
 
             await AwardPoints(userId, PointType.DailyVote, PointsPerDailyVoteCast, GetPreviousDayStartDate().ToString("s"), submissionId);
-            await AwardPoints(submission.Author, PointType.DailyVote, PointsPerDailyVoteReceived, GetPreviousDayStartDate().ToString("s"), submissionId);
+            await AwardPoints(submission.Author, PointType.DailyVoteReceived, PointsPerDailyVoteReceived, GetPreviousDayStartDate().ToString("s"), submissionId);
         }
     }
 
@@ -638,7 +636,7 @@ public partial class PioneerService
             await UpdateSubmission(submission);
 
             await AwardPoints(userId, PointType.WeeklyVote, PointsPerWeeklyVoteCast, GetPreviousWeekStartDate().ToString("s"), submissionId);
-            await AwardPoints(submission.Author, PointType.WeeklyVote, PointsPerWeeklyVoteReceived, GetPreviousWeekStartDate().ToString("s"), submissionId);
+            await AwardPoints(submission.Author, PointType.WeeklyVoteReceived, PointsPerWeeklyVoteReceived, GetPreviousWeekStartDate().ToString("s"), submissionId);
         }
     }
     

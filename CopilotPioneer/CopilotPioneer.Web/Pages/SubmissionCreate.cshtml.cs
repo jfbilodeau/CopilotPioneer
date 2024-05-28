@@ -8,13 +8,13 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace CopilotPioneer.Web.Pages;
 
-public class ScreenShotSubmission
+public class ScreenshotSubmissionModel
 {
     [Display(Name = "Screenshot")]
-    public IFormFile? File { get; set; }
-    [Display(Name = "Description (Alt text)")]
+    public IFormFile? File { get; init; }
     
-    public string? AltText { get; set; } = string.Empty;
+    [Display(Name = "Description (Alt text)")]
+    public string? AltText { get; init; } = string.Empty;
 }
 
 public class SubmissionCreate(PioneerService pioneerService) : PageModel
@@ -25,13 +25,13 @@ public class SubmissionCreate(PioneerService pioneerService) : PageModel
     public Submission Submission { get; set; } = new();
     
     [BindProperty]
-    public ScreenShotSubmission Screenshot1 { get; set; } = new();
+    public ScreenshotSubmissionModel Screenshot1 { get; set; } = new();
 
     [BindProperty]
-    public ScreenShotSubmission Screenshot2 { get; set; } = new();
+    public ScreenshotSubmissionModel Screenshot2 { get; set; } = new();
 
     [BindProperty]
-    public ScreenShotSubmission Screenshot3 { get; set; } = new();
+    public ScreenshotSubmissionModel Screenshot3 { get; set; } = new();
 
     public void OnGet()
     {
@@ -51,11 +51,13 @@ public class SubmissionCreate(PioneerService pioneerService) : PageModel
 
         Submission.Author = User.Identity.Name;
         
-        var screenshots = new ScreenShotSubmission[] {
+        var screenshots = new[] {
             Screenshot1,
             Screenshot2,
             Screenshot3,
-        }.Where(s => s.File != null).Select(s => s!).ToArray();
+        }
+            .Where(s => s.File != null)
+            .ToArray();
         
         var result = await PioneerService.CreateSubmission(Submission, screenshots);
 
