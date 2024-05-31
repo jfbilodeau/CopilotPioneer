@@ -19,10 +19,7 @@
         @if (Model.WeeklySubmissions.IsNullOrEmpty())
         {
             <p>There were no submissions last week 😱</p>
-        }
-        else if (Model.WeeklySubmissions.Count == 1)
-        {
-            <p>There were not enough submissions last week 😢</p>
+            <p><small>(or you're the only one who submitted)</small></p>
         }
         else
         {
@@ -56,10 +53,7 @@
         @if (Model.DailySubmissions.IsNullOrEmpty())
         {
             <p>There were no submissions yesterday 😱</p>
-        }
-        else if (Model.DailySubmissions.Count == 1)
-        {
-            <p>There were not enough submissions yesterday 😢</p>
+            <p><small>(or you're the only one who submitted)</small></p>
         }
         else
         {
