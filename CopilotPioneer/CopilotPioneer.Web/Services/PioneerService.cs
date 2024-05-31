@@ -525,6 +525,8 @@ public partial class PioneerService
 
     public async Task<List<Submission>> GetWeeklyVoteCandidateSubmission(string userIdToExclude)
     {
+        _logger.Log(LogLevel.Information, "GetPreviousWeekStartDate: {PreviousWeekStartDate}, GetWeekStartDate: {WeekStartDate}", GetPreviousWeekStartDate(), GetWeekStartDate());
+        
         var sql = "SELECT * FROM Submissions s where s.createdDate >= @startOfWeek and s.createdDate < @endOfWeek and s.author != @userIdToExclude";
 
         var query = new QueryDefinition(sql)
