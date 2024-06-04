@@ -5,6 +5,15 @@
         <h5 class="card-title">
             <a asp-page="SubmissionView" asp-route-id="@Model.Id">
                 @Model.Title
+                
+                @if (Model.DailyVoteWinner)
+                {
+                    <span class="badge badge-success">⭐</span>
+                }
+                @if (Model.WeeklyVoteWinner)
+                {
+                    <span class="badge badge-success">🥇</span>
+                }
             </a>
         </h5>
         <p>
@@ -36,7 +45,15 @@
             </div>
         }
 
-        <small>Submitted by <a asp-page="ProfileView" asp-route-id="@Model.Author">@Model.Author</a> @@ @Model.CreatedDate</small>
+        <small>Submitted by <a asp-page="ProfileView" asp-route-id="@Model.Author">@Model.Author</a> @@ @Model.CreatedDate 
+            @if (Model.DailyVotes > 0 || Model.WeeklyVotes > 0)
+            {
+                <span>(
+                @(Model.DailyVotes + Model.WeeklyVotes)
+                ✔️
+                )</span>
+            }
+        </small>
         <br/>
         <small>
             @if (Model.Comments.Length > 0)

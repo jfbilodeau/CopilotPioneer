@@ -7,8 +7,8 @@
 <div class="text-center">
     <h1 class="display-4">Latest submissions</h1>
     <p><a asp-page="SubmissionCreate">Submit your prompt to Copilot Pioneer here</a></p>
-    <form method="get">
-        Product:
+    <form method="get" style="display: inline">
+        <label for="ProductFilter">Product:</label>
         <select asp-for="ProductFilter">
             <option value="">Any</option>
             @foreach (var product in Model.PioneerService.GetProducts())
@@ -17,21 +17,41 @@
             }
         </select>
 
-        Tag:
+        <label for="TagFilter">Tag:</label>
         <input type="text" asp-for="TagFilter"/>
+        
+        <label for="DailyWinner">Daily ⭐:</label> 
+        <input type="checkbox" asp-for="DailyWinner"/>
+        
+        <label for="WeeklyWinner">Weekly 🥇:</label> 
+        <input type="checkbox" asp-for="WeeklyWinner"/>
 
-        Sort by:
+        <label for="SortBy">Sort by:</label>
         <select asp-for="SortBy">
             <option value="newest">newest</option>
             <option value="oldest">oldest</option>
         </select>
 
-        <button type="submit">Filter</button>
+        <button type="submit">Apply</button>
+    </form>
+    <form style="display: inline">
+        @if (Model.HasFiltersApplied)
+        {
+            <button type="submit" asp-page-handler="ClearFilters">Clear</button>
+        }
     </form>
     <div class="list-group justify-content-center">
-    @foreach (var submission in Model.Submissions)
-    {
-        <partial name="/Pages/Partials/SubmissionSummary.cshtml" model="@submission"/>
-    }
+        @if (Model.Submissions.Count == 0)
+        {
+            <h1 class="alert-warning">No submissions found</h1>
+            <h2>Try a different set of filters or clear current filters</h2>
+        }
+        else
+        {
+            @foreach (var submission in Model.Submissions)
+            {
+                <partial name="/Pages/Partials/SubmissionSummary.cshtml" model="@submission"/>
+            }
+        }
     </div>
 </div>

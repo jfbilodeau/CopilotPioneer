@@ -11,27 +11,39 @@ public class IndexModel(ILogger<IndexModel> logger, PioneerService pioneerServic
 
     public PioneerService PioneerService { get; private set; } = pioneerService;
 
-    [FromQuery(Name = "page")]
+    [BindProperty(SupportsGet = true)]
     public int PageNumber { get; set; } = 0;
 
-    [BindProperty(Name = "userId", SupportsGet = true)]
+    [BindProperty(SupportsGet = true)]
     public string UserIdFilter { get; set; } = "";
 
-    [BindProperty(Name = "product", SupportsGet = true)]
+    [BindProperty(SupportsGet = true)]
     public string ProductFilter { get; set; } = "";
 
-    [BindProperty(Name = "tag", SupportsGet = true)]
+    [BindProperty(SupportsGet = true)]
     public string TagFilter { get; set; } = "";
-
-    [BindProperty(Name="sortBy", SupportsGet = true)] 
+    
+    [BindProperty(SupportsGet = true)]
+    public bool DailyWinner { get; set; } = false;
+    
+    [BindProperty(SupportsGet = true)]
+    public bool WeeklyWinner { get; set; } = false;
+    
+    [BindProperty(SupportsGet = true)] 
     public string SortBy { get; set; } = "latest";
 
     public List<Submission> Submissions { get; private set; } = new();
+    
+    public bool HasFiltersApplied => !string.IsNullOrEmpty(UserIdFilter) || !string.IsNullOrEmpty(ProductFilter) || !string.IsNullOrEmpty(TagFilter) || DailyWinner || WeeklyWinner;
 
-    public async Task OnGet()
+    public async Task OnGetAsync()
     {
-        // Submissions = await PioneerService.GetLatestSubmissions(PageNumber, PageSize);
-        Submissions =
-            await PioneerService.GetSubmissionsByFilter(UserIdFilter, ProductFilter, TagFilter, SortBy, PageNumber);
+        Submissions = await PioneerService.GetSubmissionsByFilter(UserIdFilter, ProductFilter, TagFilter, DailyWinner, WeeklyWinner, SortBy, PageNumber);
+    }
+
+    public ActionResult OnGetClearFilters()
+    {
+        // Redirect to index to clear query string (filters)
+        return RedirectToPage();
     }
 }

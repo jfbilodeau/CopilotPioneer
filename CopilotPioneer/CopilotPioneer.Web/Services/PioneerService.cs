@@ -262,8 +262,16 @@ public partial class PioneerService
 
     private const int PageSize = 10;
 
-    public async Task<List<Submission>> GetSubmissionsByFilter(string userId = "", string productFilter = "",
-        string tagFilter = "", string sortBy = "", int pageNumber = 1, int pageSize = PageSize)
+    public async Task<List<Submission>> GetSubmissionsByFilter(
+        string userId = "", 
+        string productFilter = "",
+        string tagFilter = "",
+        bool dailyWinner = false,
+        bool weeklyWinner = false,
+        string sortBy = "",
+        int pageNumber = 1,
+        int pageSize = PageSize
+    )
     {
         var query = _submissionsContainer.GetItemLinqQueryable<Submission>().AsQueryable();
 
@@ -287,6 +295,16 @@ public partial class PioneerService
             tagFilter = tagFilter.ToLower();
 
             query = query.Where(s => s.Tags.Contains(tagFilter));
+        }
+        
+        if (dailyWinner)
+        {
+            query = query.Where(s => s.DailyVoteWinner);
+        }
+        
+        if (weeklyWinner)
+        {
+            query = query.Where(s => s.WeeklyVoteWinner);
         }
 
         if (sortBy == "oldest")
