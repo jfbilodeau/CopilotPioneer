@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace CopilotPioneer.Web.Pages;
 
-public class ScreenshotView(PioneerService _pioneerService) : PageModel
+public class ScreenshotView(PioneerService pioneerService) : PageModel
 {
     [BindProperty(SupportsGet = true)]
     public string SubmissionId { get; set; } = string.Empty;
@@ -16,7 +16,7 @@ public class ScreenshotView(PioneerService _pioneerService) : PageModel
     
     public async Task<ActionResult> OnGetAsync()
     {
-        var stream = await _pioneerService.GetScreenshot(SubmissionId, ScreenshotId, Size);
+        var stream = await pioneerService.GetScreenshot(SubmissionId, ScreenshotId, Size);
         
         if (stream == null)
         {

@@ -6,6 +6,7 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Fluent;
 using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
 using SkiaSharp;
 using Point = CopilotPioneer.Web.Models.Point;
 
@@ -218,7 +219,7 @@ public partial class PioneerService
 
     public async Task<Submission?> GetSubmissionById(string submissionId)
     {
-        var sql = "SELECT * FROM Submissions s where s.id = @submissionId";
+        var sql = "select * from Submissions s where s.id = @submissionId";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@submissionId", submissionId);
@@ -240,7 +241,7 @@ public partial class PioneerService
 
     public async Task<List<Submission>> GetLatestSubmissions(int page, int count)
     {
-        var sql = "SELECT * FROM Submissions s ORDER BY s.createdDate DESC OFFSET @offset LIMIT @limit";
+        var sql = "select * from Submissions s ORDER BY s.createdDate DESC OFFSET @offset LIMIT @limit";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@offset", page * count)
@@ -368,7 +369,7 @@ public partial class PioneerService
 
     public async Task<Profile?> GetProfile(string id)
     {
-        var sql = "SELECT * FROM Profiles p where p.id = @id";
+        var sql = "select * from Profiles p where p.id = @id";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@id", id);
@@ -412,7 +413,7 @@ public partial class PioneerService
 
     private async Task<bool> HasSubmittedToday(string userId)
     {
-        var sql = "SELECT * FROM Points p where p.userId = @userId and p.dateCreated >= @dateCreated";
+        var sql = "select * from Points p where p.userId = @userId and p.dateCreated >= @dateCreated";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@userId", userId)
@@ -470,8 +471,7 @@ public partial class PioneerService
 
     public async Task<Point?> GetPoint(string userId, PointType type, string frame)
     {
-        var sql =
-            "SELECT p FROM Points p where p.userId = @userId and p.type = @type and p.frame = @frame";
+        var sql = "select p from Points p where p.userId = @userId and p.type = @type and p.frame = @frame";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@userId", userId)
@@ -525,9 +525,9 @@ public partial class PioneerService
 
     public async Task<List<Submission>> GetWeeklyVoteCandidateSubmission(string userIdToExclude)
     {
-        _logger.Log(LogLevel.Information, "GetPreviousWeekStartDate: {PreviousWeekStartDate}, GetWeekStartDate: {WeekStartDate}", GetPreviousWeekStartDate(), GetWeekStartDate());
+        _logger.LogInformation("GetPreviousWeekStartDate: {PreviousWeekStartDate}, GetWeekStartDate: {WeekStartDate}", GetPreviousWeekStartDate(), GetWeekStartDate());
         
-        var sql = "SELECT * FROM Submissions s where s.createdDate >= @startOfWeek and s.createdDate < @endOfWeek and s.author != @userIdToExclude";
+        var sql = "select * from Submissions s where s.createdDate >= @startOfWeek and s.createdDate < @endOfWeek and s.author != @userIdToExclude";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@startOfWeek", GetPreviousWeekStartDate())
@@ -554,7 +554,7 @@ public partial class PioneerService
 
     public async Task<List<Submission>> GetDailyVoteCandidateSubmission(string userIdToExclude)
     {
-        var sql = "SELECT * FROM Submissions s where s.createdDate >= @yesterday and s.createdDate < @today and s.author != @userIdToExclude";
+        var sql = "select * from Submissions s where s.createdDate >= @yesterday and s.createdDate < @today and s.author != @userIdToExclude";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@yesterday", GetPreviousDayStartDate())
@@ -660,5 +660,170 @@ public partial class PioneerService
         await UpdateSubmission(submission);
 
         return comment.Id;
+    }
+
+    public async Task TallyVotes()
+    {
+        // Update daily votes as necessary.
+        var latestDailyVoteDate = await GetLatestDailyVoteResultsDate();
+        var startDate = latestDailyVoteDate.AddDays(1); // Move past last vote.
+        var endDate = GetPreviousDayStartDate();
+
+        if (startDate < endDate) 
+        {
+            // Calculate votes for each day.
+            var dayCount = (endDate - startDate).Days;
+            
+            for (var day = 0; day < dayCount; day++)
+            {
+                var voteDate = startDate.AddDays(day);
+                await TallyDailyVotes(voteDate);
+            }
+        }
+        
+        // Update weekly votes as necessary.
+        var latestWeeklyVoteDate = await GetLatestWeeklyVoteResultsDate();
+        var startWeek = latestWeeklyVoteDate.AddDays(7); // Move past last vote week.
+        var endWeek = GetPreviousWeekStartDate();
+
+        if (startWeek < endWeek)
+        {
+            // Calculate votes for each week.
+            var weekCount = (endWeek - startWeek).Days / 7;
+            
+            for (var week = 0; week < weekCount; week++)
+            {
+                var voteDate = startDate.AddDays(week * 7);
+                await TallyWeeklyVotes(voteDate);
+            }
+        }
+    }
+
+    private async Task TallyDailyVotes(DateTime voteDate)
+    {
+        var sql = "select * from Submissions s where s.createdDate >= @startDate and s.createdDate < @endDate";
+        
+        var query = new QueryDefinition(sql)
+            .WithParameter("@startDate", voteDate)
+            .WithParameter("@endDate", voteDate.AddDays(1));
+
+        using var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
+        
+        List<Submission> submissions = [];
+        
+        while (feedIterator.HasMoreResults)
+        {
+            var results = await feedIterator.ReadNextAsync();
+            
+            submissions.AddRange(results);    
+        }
+
+        if (submissions.IsNullOrEmpty())
+        {
+            // No submissions to tally. Abort.
+            return; 
+        }
+        var mostVotes = submissions.Max(r => r.DailyVotes);
+
+        if (mostVotes == 0)
+        {
+            // No votes cast. Abort.
+            return;
+        }
+        
+        foreach (var submission in submissions.Where(submission => submission.DailyVotes == mostVotes))
+        {
+            submission.DailyVoteWinner = true;
+            await AwardPoints(submission.Author, PointType.DailyVoteWinner, 0, voteDate.ToString("s"), submission.Id);
+            await UpdateSubmission(submission);
+        }
+    }
+
+    private async Task TallyWeeklyVotes(DateTime voteDate)
+    {
+        var sql = "select * from Submissions s where s.createdDate >= @startDate and s.createdDate < @endDate";
+        
+        var query = new QueryDefinition(sql)
+            .WithParameter("@startDate", voteDate)
+            .WithParameter("@endDate", voteDate.AddDays(7));
+
+        using var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
+        
+        List<Submission> submissions = [];
+        
+        while (feedIterator.HasMoreResults)
+        {
+            var results = await feedIterator.ReadNextAsync();
+            
+            submissions.AddRange(results);    
+        }
+
+        if (submissions.IsNullOrEmpty())
+        {
+            // No submissions to tally. Abort.
+            return; 
+        }
+        var mostVotes = submissions.Max(r => r.WeeklyVotes);
+
+        if (mostVotes == 0)
+        {
+            // No votes cast. Abort.
+            return;
+        }
+        
+        foreach (var submission in submissions.Where(submission => submission.WeeklyVotes == mostVotes))
+        {
+            submission.WeeklyVoteWinner = true;
+            await AwardPoints(submission.Author, PointType.WeeklyVoteWinner, 0, voteDate.ToString("s"), submission.Id);
+            await UpdateSubmission(submission);
+        }
+    }
+
+    private async Task<DateTime> GetLatestDailyVoteResultsDate()
+    {
+        var sql = "select value p.frame from Points p where p.type = @dailyVoteWinner order by p.frame desc offset 0 limit 1";
+        
+        var query = new QueryDefinition(sql)
+            .WithParameter("@dailyVoteWinner", PointType.DailyVoteWinner.ToString());
+        
+        using var feedIterator = _pointsContainer.GetItemQueryIterator<DateTime>(query);
+        
+        var latestDailyVoteWinner = DateTime.Parse("2024-05-15");  // Date Copilot Pioneer was launched.
+        
+        while (feedIterator.HasMoreResults)
+        {
+            var frames = await feedIterator.ReadNextAsync();
+            
+            foreach (var frame in frames)
+            {
+                latestDailyVoteWinner = frame;
+            }
+        }
+
+        return latestDailyVoteWinner;
+    }
+    
+    private async Task<DateTime> GetLatestWeeklyVoteResultsDate()
+    {
+        var sql = "select value p.frame from Points p where p.type = @weeklyVoteWinner order by p.frame desc offset 0 limit 1";
+        
+        var query = new QueryDefinition(sql)
+            .WithParameter("@weeklyVoteWinner", PointType.WeeklyVoteWinner.ToString());
+        
+        using var feedIterator = _pointsContainer.GetItemQueryIterator<DateTime>(query);
+        
+        var latestWeeklyVoteWinner = DateTime.Parse("2024-05-13");  // Week Copilot Pioneer was launched.
+        
+        while (feedIterator.HasMoreResults)
+        {
+            var frames = await feedIterator.ReadNextAsync();
+            
+            foreach (var frame in frames)
+            {
+                latestWeeklyVoteWinner = frame;
+            }
+        }
+
+        return latestWeeklyVoteWinner;
     }
 }

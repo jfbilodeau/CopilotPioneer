@@ -1,0 +1,12 @@
+﻿@page "/Admin"
+@model Administration
+
+@{
+    ViewBag.Title = "Admin";
+}
+
+<h1>Administration</h1>
+
+<form method="post">
+    <button asp-page-handler="TallyVotes">Tally votes</button>
+</form>

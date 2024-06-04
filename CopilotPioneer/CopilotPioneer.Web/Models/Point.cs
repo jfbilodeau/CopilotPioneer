@@ -8,8 +8,10 @@ public enum PointType
     Submission = 1,
     DailyVote,
     DailyVoteReceived,
+    DailyVoteWinner,
     WeeklyVote,
     WeeklyVoteReceived,
+    WeeklyVoteWinner,
 }
 
 public class Point

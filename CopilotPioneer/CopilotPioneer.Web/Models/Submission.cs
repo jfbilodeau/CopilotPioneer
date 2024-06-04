@@ -22,7 +22,9 @@ public sealed class Submission
     public string[] Tags { get; set; } = [];
     
     public int DailyVotes { get; set; } = 0;
+    public bool DailyVoteWinner { get; set; } = false;
     public int WeeklyVotes { get; set; } = 0;
+    public bool WeeklyVoteWinner { get; set; } = false;
     
     public Screenshot[] Screenshots { get; set; } = [];
     

@@ -5,7 +5,7 @@
 @inject IMemoryCache MemoryCache
 
 @{
-    var userId = User.Identity?.Name ?? "";
+    var userId = User.Identity?.Name ?? string.Empty;
     
     var profile = MemoryCache.Get<Profile>($"profile_{userId}");
 
@@ -13,7 +13,7 @@
     {
         profile = await PioneerService.GetProfileOrDefault(userId);
         
-        MemoryCache.Set("profile", profile);
+        MemoryCache.Set($"profile_{userId}", profile);
     }
 
     ViewBag.Profile = profile;
