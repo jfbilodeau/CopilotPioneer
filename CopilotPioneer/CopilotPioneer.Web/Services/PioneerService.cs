@@ -31,6 +31,10 @@ public partial class PioneerService
     private const string ScreenShotSizeOriginal = "original";
     private const string ScreenShotSizeHero = "hero";
     private const string ScreenShotSizeThumbnail = "thumbnail";
+    
+    // Path to placeholder images
+    const string  PlaceholderDocumentHeroBlobName = "placeholder/document-hero.png";
+    const string  PlaceholderDocumentThumbnailBlobName = "placeholder/document-thumbnail.png";
 
     private readonly IMemoryCache _memoryCache;
     private readonly ILogger<PioneerService> _logger;
@@ -72,6 +76,20 @@ public partial class PioneerService
         var blobServiceClient = new BlobServiceClient(connectionString);
         _screenshotContainerClient = blobServiceClient.GetBlobContainerClient("screenshots");
         _screenshotContainerClient.CreateIfNotExists();
+        
+        // Initialize document placeholder images
+        _screenshotContainerClient
+            .GetBlobClient(PlaceholderDocumentHeroBlobName)
+            .Upload(
+                File.OpenRead("wwwroot/images/placeholder/document-hero.png"), 
+                true
+            );
+        _screenshotContainerClient
+            .GetBlobClient(PlaceholderDocumentThumbnailBlobName)
+            .Upload(
+                File.OpenRead("wwwroot/images/placeholder/document-thumbnail.png"), 
+                true
+            );
     }
 
     public Product[] GetProducts()
@@ -89,7 +107,7 @@ public partial class PioneerService
         ];
     }
 
-    private SKImage ResizeImage(SKImage image, int targetWidth, int targetHeight)
+    private SKImage ResizeImage(SKImage? image, int targetWidth, int targetHeight)
     {
         var width = image.Width;
         var height = image.Height;
@@ -123,7 +141,7 @@ public partial class PioneerService
         return targetImage;
     }
 
-    private async Task<Screenshot> CreateScreenshot(string submissionId, ScreenshotSubmissionModel screenshotSubmissionModel)
+    private async Task<Screenshot?> CreateScreenshot(string submissionId, ScreenshotSubmissionModel screenshotSubmissionModel)
     {
         var screenshotId = Guid.NewGuid().ToString();
         
@@ -138,34 +156,54 @@ public partial class PioneerService
         };
         
         // Resize image to hero and thumbnail sizes
-        using var image = SKImage.FromEncodedData(screenshotSubmissionModel.File!.OpenReadStream());
-        using var heroImage = ResizeImage(image, 400, 400);
-        using var thumbnailImage = ResizeImage(image, 100, 100);
+        await using var stream = screenshotSubmissionModel.File!.OpenReadStream();
 
-        // Save images
-        var fullSizeBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.OriginalName);
-        await fullSizeBlobClient.UploadAsync(image.Encode().AsStream(), true);
-        
-        var heroBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.HeroName);
-        await heroBlobClient.UploadAsync(heroImage.Encode().AsStream(), true);
-        
-        var thumbnailBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.ThumbnailName);
-        await thumbnailBlobClient.UploadAsync(thumbnailImage.Encode().AsStream(), true);
+        using var image = SKImage.FromEncodedData(stream);
+
+        if (image != null)
+        {
+            using var heroImage = ResizeImage(image, 400, 400);
+            using var thumbnailImage = ResizeImage(image, 100, 100);
+
+            // Save images
+            var fullSizeBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.OriginalName);
+            await fullSizeBlobClient.UploadAsync(image.Encode().AsStream(), true);
+
+            var heroBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.HeroName);
+            await heroBlobClient.UploadAsync(heroImage.Encode().AsStream(), true);
+
+            var thumbnailBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.ThumbnailName);
+            await thumbnailBlobClient.UploadAsync(thumbnailImage.Encode().AsStream(), true);
+        }
+        else 
+        {
+            // Set thumbnail and hero image to placeholder.
+            screenshot.OriginalName = $"submissions/{submissionId}/{screenshotId}/{screenshotSubmissionModel.File!.FileName}";
+            screenshot.HeroName = PlaceholderDocumentHeroBlobName;
+            screenshot.ThumbnailName = PlaceholderDocumentThumbnailBlobName;
+            
+            // Could not read image. Upload it as a raw document.
+            var documentBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.OriginalName);
+            await documentBlobClient.UploadAsync(screenshotSubmissionModel.File!.OpenReadStream(), true);
+            
+            // Mark as document.
+            screenshot.IsDocument = true;
+        }
 
         return screenshot;
     }
-    
-    public async Task<Stream?> GetScreenshot(string submissionId, string screenshotId, string size)
+
+    public async Task<Screenshot?> GetScreenshot(string submissionId, string screenshotId)
     {
         var submission = await GetSubmissionById(submissionId);
 
         var screenshot = submission?.Screenshots.FirstOrDefault(s => s.Id == screenshotId);
 
-        if (screenshot == null)
-        {
-            return null;
-        }
-
+        return screenshot;
+    }
+    
+    public async Task<Stream?> GetScreenshotStream(Screenshot screenshot, string size)
+    {
         string path;
 
         switch (size)
@@ -203,7 +241,15 @@ public partial class PioneerService
         foreach (var screenshot in screenshots)
         {
             var screenshotModel = await CreateScreenshot(submission.Id, screenshot);
-            submission.Screenshots = [..submission.Screenshots, screenshotModel];
+
+            if (screenshotModel != null)
+            {
+                submission.Screenshots = [..submission.Screenshots, screenshotModel];
+            }
+            else
+            {
+                _logger.LogWarning("Could not create screenshot for submission {SubmissionId} ", submission.Id);
+            }
         }
 
         await _submissionsContainer.CreateItemAsync(submission);
@@ -342,6 +388,20 @@ public partial class PioneerService
 
     public async Task DeleteSubmission(Submission submission)
     {
+        // Delete screenshots
+        foreach (var screenshot in submission.Screenshots)
+        {
+            var originalBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.OriginalName);
+            await originalBlobClient.DeleteIfExistsAsync();
+
+            var heroBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.HeroName);
+            await heroBlobClient.DeleteIfExistsAsync();
+
+            var thumbnailBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.ThumbnailName);
+            await thumbnailBlobClient.DeleteIfExistsAsync();
+        }
+        
+        // Delete actual subscription
         await _submissionsContainer.DeleteItemAsync<Submission>(submission.Id, new PartitionKey(submission.Author));
     }
 

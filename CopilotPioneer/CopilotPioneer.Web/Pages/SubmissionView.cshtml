@@ -23,7 +23,8 @@
     </p>
 
     <p>
-        <code>@Model.Submission.Prompt</code>
+        <code id="prompt_@Model.Id">@Model.Submission.Prompt</code>
+        <button type="button" class="btn btn-sm" onclick="pioneer.copyElementToClipboard('#prompt_@Model.Id')">&#128203;</button>
     </p>
 
     @if (!string.IsNullOrEmpty(Model.Submission.Notes))
@@ -39,7 +40,7 @@
         <p>
             @foreach (var screenshot in Model.Submission.Screenshots)
             {
-                <a asp-page="ScreenshotView" asp-route-submissionId="@screenshot.SubmissionId" asp-route-screenshotId="@screenshot.Id" asp-route-size="original">
+                <a asp-page="ScreenshotView" asp-route-submissionId="@screenshot.SubmissionId" asp-route-screenshotId="@screenshot.Id" asp-route-size="original" target="_blank">
                     <img src="/ScreenshotView/@screenshot.SubmissionId/@screenshot.Id/hero" class="img-thumbnail" alt="@screenshot.AltText"/>
                 </a>
             }

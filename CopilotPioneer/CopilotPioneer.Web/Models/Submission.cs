@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 
 namespace CopilotPioneer.Web.Models;
 
@@ -25,6 +26,9 @@ public sealed class Submission
     public bool DailyVoteWinner { get; set; } = false;
     public int WeeklyVotes { get; set; } = 0;
     public bool WeeklyVoteWinner { get; set; } = false;
+    
+    [JsonIgnore]
+    public int TotalVotes => DailyVotes + WeeklyVotes;
     
     public Screenshot[] Screenshots { get; set; } = [];
     

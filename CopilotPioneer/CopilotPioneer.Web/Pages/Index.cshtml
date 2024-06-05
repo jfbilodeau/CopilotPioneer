@@ -1,57 +1,80 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Home";
 }
 
 <div class="text-center">
     <h1 class="display-4">Latest submissions</h1>
-    <p><a asp-page="SubmissionCreate">Submit your prompt to Copilot Pioneer here</a></p>
-    <form method="get" style="display: inline">
-        <label for="ProductFilter">Product:</label>
-        <select asp-for="ProductFilter">
-            <option value="">Any</option>
-            @foreach (var product in Model.PioneerService.GetProducts())
+    <p>
+        <a asp-page="SubmissionCreate">Submit your prompt to Copilot Pioneer here</a>
+    </p>
+    <div class="container">
+        <div class="row">
+            <div>
+                <form class="">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterPane">Filters</button>
+                    @if (Model.HasFiltersApplied)
+                    {
+                        <button type="submit" class="btn btn-primary" asp-page-handler="ClearFilters">Clear Filters</button>
+                    }
+                </form>
+            </div>
+        </div>
+        <div class="row">
+            <div id="filterPane" class="collapse form-group text-start">
+                <form method="get" class="gx-5" style="display: inline">
+                    <div>
+                        <label asp-for="ProductFilter" class="form-label">Product:</label>
+                        <select asp-for="ProductFilter" class="form-control">
+                            <option value="">Any</option>
+                            @foreach (var product in Model.PioneerService.GetProducts())
+                            {
+                                <option value="@product.Id">@product.Label</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label asp-for="TagFilter" class="form-label">Tag:</label>
+                        <input type="text" asp-for="TagFilter" class="form-control"/>
+                    </div>
+
+                    <div class="form-check">
+                        <input type="checkbox" asp-for="DailyWinner" class="form-check-input"/>
+                        <label asp-for="DailyWinner" class="form-check-label">Daily vote winner ⭐</label>
+                    </div>
+
+                    <div class="form-check">
+                        <input type="checkbox" asp-for="WeeklyWinner" class="form-check-input"/>
+                        <label asp-for="WeeklyWinner" class="form-check-label">Weekly vote winner 🥇</label>
+                    </div>
+                    <div>
+                        <label asp-for="SortBy" class="form-label">Sort by submission date:</label>
+                        <select asp-for="SortBy" class="form-control">
+                            <option value="newest">newest</option>
+                            <option value="oldest">oldest</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="list-group justify-content-center">
+            @if (Model.Submissions.Count == 0)
             {
-                <option value="@product.Id">@product.Label</option>
+                <h1 class="alert-warning">No submissions found</h1>
+                <h2>Try a different set of filters or clear current filters</h2>
             }
-        </select>
-
-        <label for="TagFilter">Tag:</label>
-        <input type="text" asp-for="TagFilter"/>
-        
-        <label for="DailyWinner">Daily ⭐:</label> 
-        <input type="checkbox" asp-for="DailyWinner"/>
-        
-        <label for="WeeklyWinner">Weekly 🥇:</label> 
-        <input type="checkbox" asp-for="WeeklyWinner"/>
-
-        <label for="SortBy">Sort by:</label>
-        <select asp-for="SortBy">
-            <option value="newest">newest</option>
-            <option value="oldest">oldest</option>
-        </select>
-
-        <button type="submit">Apply</button>
-    </form>
-    <form style="display: inline">
-        @if (Model.HasFiltersApplied)
-        {
-            <button type="submit" asp-page-handler="ClearFilters">Clear</button>
-        }
-    </form>
-    <div class="list-group justify-content-center">
-        @if (Model.Submissions.Count == 0)
-        {
-            <h1 class="alert-warning">No submissions found</h1>
-            <h2>Try a different set of filters or clear current filters</h2>
-        }
-        else
-        {
-            @foreach (var submission in Model.Submissions)
+            else
             {
-                <partial name="/Pages/Partials/SubmissionSummary.cshtml" model="@submission"/>
+                @foreach (var submission in Model.Submissions)
+                {
+                    <partial name="/Pages/Partials/SubmissionSummary.cshtml" model="@submission"/>
+                }
             }
-        }
+        </div>
     </div>
 </div>

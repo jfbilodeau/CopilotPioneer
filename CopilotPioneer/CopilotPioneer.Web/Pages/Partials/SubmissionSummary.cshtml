@@ -18,8 +18,9 @@
         </h5>
         <p>
             <code class="card-text">
-                <strong>Prompt:</strong> @Model.Prompt
+                <strong>Prompt:</strong> <span id="prompt_@Model.Id">@Model.Prompt</span>
             </code>
+            <button type="button" class="btn btn-sm" onclick="pioneer.copyElementToClipboard('#prompt_@Model.Id')">&#128203;</button>
         </p>
         @if (Model.Tags.Any())
         {
@@ -38,7 +39,7 @@
             <div class="card-link">
                 @foreach (var screenshot in Model.Screenshots)
                 {
-                    <a asp-page="ScreenshotView" asp-route-submissionId="@screenshot.SubmissionId" asp-route-screenshotId="@screenshot.Id" asp-route-size="original">
+                    <a asp-page="ScreenshotView" asp-route-submissionId="@screenshot.SubmissionId" asp-route-screenshotId="@screenshot.Id" asp-route-size="original" target="_blank">
                         <img src="/ScreenshotView/@screenshot.SubmissionId/@screenshot.Id/thumbnail" class="img-thumbnail" alt="@screenshot.AltText"/>
                     </a>
                 }

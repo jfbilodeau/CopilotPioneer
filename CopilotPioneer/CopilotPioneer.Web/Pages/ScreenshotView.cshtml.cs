@@ -16,11 +16,23 @@ public class ScreenshotView(PioneerService pioneerService) : PageModel
     
     public async Task<ActionResult> OnGetAsync()
     {
-        var stream = await pioneerService.GetScreenshot(SubmissionId, ScreenshotId, Size);
+        var screenshot = await pioneerService.GetScreenshot(SubmissionId, ScreenshotId);
+        
+        if (screenshot == null)
+        {
+            return NotFound();
+        }
+        
+        var stream = await pioneerService.GetScreenshotStream(screenshot, Size);
         
         if (stream == null)
         {
             return NotFound();
+        }
+        
+        if (screenshot.IsDocument) 
+        {
+            return File(stream, "application/octet-stream", Path.GetFileName(screenshot.OriginalName));
         }
         
         return File(stream, "image/png");
