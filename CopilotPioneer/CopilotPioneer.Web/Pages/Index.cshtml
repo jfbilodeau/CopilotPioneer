@@ -28,10 +28,10 @@
                     else
                     {
                         <h2>Congratulations to the weekly vote winner(s):</h2>
-                        <nav>
+                        <div>
                             @foreach (var winner in winners.WeeklyWinners)
                             {
-                                <li>
+                                <p>
                                     @winner.Profile.GetDisplayName()
                                     
                                     @if (winner.Submission != null)
@@ -40,9 +40,9 @@
                                     }
                                     
                                     ⭐
-                                </li>
+                                </p>
                             }
-                        </nav>
+                        </div>
                     }
                     @if (winners.DailyWinners.Count == 0)
                     {
@@ -51,10 +51,10 @@
                     else
                     {
                         <h2>Congratulations to the daily vote winner(s):</h2>
-                        <nav>
+                        <div>
                             @foreach (var winner in winners.DailyWinners)
                             {
-                                <li>
+                                <p>
                                     @winner.Profile.GetDisplayName()
                                     
                                     @if (winner.Submission != null)
@@ -63,9 +63,9 @@
                                     }
                                     
                                     🥇
-                                </li>
+                                </p>
                             }
-                        </nav>
+                        </div>
                     }
                 }
             </div>
