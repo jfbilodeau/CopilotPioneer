@@ -32,11 +32,11 @@
                             @foreach (var winner in winners.WeeklyWinners)
                             {
                                 <p>
-                                    @winner.Profile.GetDisplayName()
+                                    @winner.Profile.GetDisplayName() - 
                                     
                                     @if (winner.Submission != null)
                                     {
-                                        <a asp-page="SubmissionView" asp-route-id="@winner.Submission.Id">(@winner.Submission.Title)</a>
+                                        <a asp-page="SubmissionView" asp-route-id="@winner.Submission.Id">@winner.Submission.Title</a>
                                     }
                                     
                                     ⭐
@@ -55,11 +55,11 @@
                             @foreach (var winner in winners.DailyWinners)
                             {
                                 <p>
-                                    @winner.Profile.GetDisplayName()
+                                    @winner.Profile.GetDisplayName() - 
                                     
                                     @if (winner.Submission != null)
                                     {
-                                        <a asp-page="SubmissionView" asp-route-id="@winner.Submission.Id">(@winner.Submission.Title)</a>
+                                        <a asp-page="SubmissionView" asp-route-id="@winner.Submission.Id">@winner.Submission.Title</a>
                                     }
                                     
                                     🥇
