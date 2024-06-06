@@ -2,13 +2,15 @@
 
 public class WinnerProfile
 {
-    public string UserId { get; set; } = string.Empty;
-    public string UserName { get; set; } = string.Empty;
-    public DateTime Date { get; set; }
+    public DateTime Date { get; init; }
+
+    public Profile Profile { get; init; } = new();
+
+    public Submission? Submission { get; init; } = new();
 }
 
 public class VoteWinners
 {
-    public List<WinnerProfile> DailyWinners { get; set; } = [];
-    public List<WinnerProfile> WeeklyWinners { get; set; } = [];
+    public List<WinnerProfile> DailyWinners { get; init; } = [];
+    public List<WinnerProfile> WeeklyWinners { get; init; } = [];
 }

@@ -28,12 +28,21 @@
                     else
                     {
                         <h2>Congratulations to the Weekly vote winner(s):</h2>
-                        <ul>
+                        <nav>
                             @foreach (var winner in winners.WeeklyWinners)
                             {
-                                <li>@winner.UserName 🥇</li>
+                                <li>
+                                    @winner.Profile.GetDisplayName()
+                                    
+                                    @if (winner.Submission != null)
+                                    {
+                                        <a asp-page="SubmissionView" asp-route-id="@winner.Submission.Id">(@winner.Submission.Title)</a>
+                                    }
+                                    
+                                    🥇
+                                </li>
                             }
-                        </ul>
+                        </nav>
                     }
                     @if (winners.DailyWinners.Count == 0)
                     {
@@ -42,12 +51,21 @@
                     else
                     {
                         <h2>Congratulations to the daily vote winner(s):</h2>
-                        <ul>
+                        <nav>
                             @foreach (var winner in winners.DailyWinners)
                             {
-                                <li>@winner.UserName ⭐</li>
+                                <li>
+                                    @winner.Profile.GetDisplayName()
+                                    
+                                    @if (winner.Submission != null)
+                                    {
+                                        <a asp-page="SubmissionView" asp-route-id="@winner.Submission.Id">(@winner.Submission.Title)</a>
+                                    }
+                                    
+                                    🥇
+                                </li>
                             }
-                        </ul>
+                        </nav>
                     }
                 }
             </div>

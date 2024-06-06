@@ -896,8 +896,7 @@ public partial class PioneerService
 
     private async Task<DateTime> GetLatestWeeklyVoteResultsDate()
     {
-        var sql =
-            "select value p.frame from Points p where p.type = @weeklyVoteWinner order by p.frame desc offset 0 limit 1";
+        var sql = "select value p.frame from Points p where p.type = @weeklyVoteWinner order by p.frame desc offset 0 limit 1";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@weeklyVoteWinner", PointType.WeeklyVoteWinner.ToString());
@@ -921,7 +920,7 @@ public partial class PioneerService
 
     private async Task<List<WinnerProfile>> GetVoteWinner(PointType type, string frame)
     {
-        var sql = "select p.userId, p.frame from Points p where p.type = @type and p.frame = @frame";
+        var sql = "select p.userId, p.frame, p.tagId from Points p where p.type = @type and p.frame = @frame";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@type", type.ToString())
@@ -938,13 +937,16 @@ public partial class PioneerService
             foreach (var point in points)
             {
                 // Get profile
-                var profile = await GetProfile(point.UserId);
+                var profile = await GetProfileOrDefault(point.UserId);
+                
+                // Get submission
+                var submission = await GetSubmissionById(point.TagId);
 
                 var winner = new WinnerProfile
                 {
-                    UserId = point.UserId,
-                    UserName = profile?.Name ?? point.UserId,
                     Date = DateTime.Parse(point.Frame),
+                    Profile = profile,
+                    Submission = submission,
                 };
                 
                 winners.Add(winner);

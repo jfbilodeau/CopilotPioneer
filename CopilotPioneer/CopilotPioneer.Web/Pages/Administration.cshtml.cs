@@ -20,4 +20,9 @@ public class Administration(PioneerService pioneerService, MemoryCache memoryCac
         // Clear the winners from the cache
         memoryCache.Remove("voteWinners");
     }
+
+    public async void OnPostClearMemoryCache()
+    {
+        memoryCache.Clear();
+    }
 }
