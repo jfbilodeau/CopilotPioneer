@@ -1,10 +1,12 @@
 ﻿@using CopilotPioneer.Web.Models
 @using CopilotPioneer.Web.Services
 @using Microsoft.Extensions.Caching.Memory
+
 @inject PioneerService PioneerService
 @inject IMemoryCache MemoryCache
 
 @{
+    // Initialize profile
     var userId = User.Identity?.Name ?? string.Empty;
     
     var profile = MemoryCache.Get<Profile>($"profile_{userId}");
@@ -17,6 +19,17 @@
     }
 
     ViewBag.Profile = profile;
+    
+    // Initialize winners
+    var winners = MemoryCache.Get<VoteWinners>("voteWinners");
 
+    if (winners == null)
+    {
+        winners = await PioneerService.GetVoteWinners();
+        
+        MemoryCache.Set("voteWinners", winners);
+    }
+
+    // Initialize layout
     Layout = "_Layout";
 }

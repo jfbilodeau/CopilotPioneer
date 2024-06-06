@@ -1,7 +1,14 @@
 ﻿@page
+
+@using Microsoft.Extensions.Caching.Memory
+@using CopilotPioneer.Web.Models
+
 @model IndexModel
+@inject IMemoryCache MemoryCache
 @{
     ViewData["Title"] = "Home";
+    
+    var winners = MemoryCache.Get<VoteWinners>("voteWinners");
 }
 
 <div class="text-center">
@@ -10,6 +17,41 @@
         <a asp-page="SubmissionCreate">Submit your prompt to Copilot Pioneer here</a>
     </p>
     <div class="container">
+        <div class="row">
+            <div class="alert alert-success">
+                @if (winners != null)
+                {
+                    @if (winners.WeeklyWinners.Count == 0)
+                    {
+                        <h2>There were no votes last week 😱</h2>
+                    }
+                    else
+                    {
+                        <h2>Congratulations to the Weekly vote winner(s):</h2>
+                        <ul>
+                            @foreach (var winner in winners.WeeklyWinners)
+                            {
+                                <li>@winner.UserName 🥇</li>
+                            }
+                        </ul>
+                    }
+                    @if (winners.DailyWinners.Count == 0)
+                    {
+                        <h2>There were no votes yesterday 😱</h2>
+                    }
+                    else
+                    {
+                        <h2>Congratulations to the daily vote winner(s):</h2>
+                        <ul>
+                            @foreach (var winner in winners.DailyWinners)
+                            {
+                                <li>@winner.UserName ⭐</li>
+                            }
+                        </ul>
+                    }
+                }
+            </div>
+        </div>
         <div class="row">
             <div>
                 <form class="">

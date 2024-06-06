@@ -26,15 +26,15 @@ public partial class PioneerService
     private const int PointsPerDailyVoteCast = 1;
     private const int PointsPerWeeklyVoteCast = 2;
     private const int PointsPerWeeklyVoteReceived = 2;
-    
+
     // Screenshot size names
     private const string ScreenShotSizeOriginal = "original";
     private const string ScreenShotSizeHero = "hero";
     private const string ScreenShotSizeThumbnail = "thumbnail";
-    
+
     // Path to placeholder images
-    const string  PlaceholderDocumentHeroBlobName = "placeholder/document-hero.png";
-    const string  PlaceholderDocumentThumbnailBlobName = "placeholder/document-thumbnail.png";
+    const string PlaceholderDocumentHeroBlobName = "placeholder/document-hero.png";
+    const string PlaceholderDocumentThumbnailBlobName = "placeholder/document-thumbnail.png";
 
     private readonly IMemoryCache _memoryCache;
     private readonly ILogger<PioneerService> _logger;
@@ -76,18 +76,18 @@ public partial class PioneerService
         var blobServiceClient = new BlobServiceClient(connectionString);
         _screenshotContainerClient = blobServiceClient.GetBlobContainerClient("screenshots");
         _screenshotContainerClient.CreateIfNotExists();
-        
+
         // Initialize document placeholder images
         _screenshotContainerClient
             .GetBlobClient(PlaceholderDocumentHeroBlobName)
             .Upload(
-                File.OpenRead("wwwroot/images/placeholder/document-hero.png"), 
+                File.OpenRead("wwwroot/images/placeholder/document-hero.png"),
                 true
             );
         _screenshotContainerClient
             .GetBlobClient(PlaceholderDocumentThumbnailBlobName)
             .Upload(
-                File.OpenRead("wwwroot/images/placeholder/document-thumbnail.png"), 
+                File.OpenRead("wwwroot/images/placeholder/document-thumbnail.png"),
                 true
             );
     }
@@ -107,33 +107,33 @@ public partial class PioneerService
         ];
     }
 
-    private SKImage ResizeImage(SKImage? image, int targetWidth, int targetHeight)
+    private SKImage ResizeImage(SKImage image, int targetWidth, int targetHeight)
     {
         var width = image.Width;
         var height = image.Height;
-        
+
         var aspectRatio = (float)width / height;
-        
+
         var targetAspectRatio = (float)targetWidth / targetHeight;
-        
+
         var scale = aspectRatio > targetAspectRatio
             ? (float)targetWidth / width
             : (float)targetHeight / height;
-        
+
         var scaledWidth = (int)(width * scale);
         var scaledHeight = (int)(height * scale);
-        
+
         var targetImageInfo = new SKImageInfo(scaledWidth, scaledHeight);
         using var surface = SKSurface.Create(targetImageInfo);
-        
+
         var canvas = surface.Canvas;
 
         canvas.Clear(SKColors.Transparent);
-        
+
         canvas.Scale(scale);
-        
-        canvas.DrawImage(image, 0, 0, new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = true});
-        
+
+        canvas.DrawImage(image, 0, 0, new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = true });
+
         canvas.Flush();
 
         var targetImage = surface.Snapshot();
@@ -141,10 +141,11 @@ public partial class PioneerService
         return targetImage;
     }
 
-    private async Task<Screenshot?> CreateScreenshot(string submissionId, ScreenshotSubmissionModel screenshotSubmissionModel)
+    private async Task<Screenshot?> CreateScreenshot(string submissionId,
+        ScreenshotSubmissionModel screenshotSubmissionModel)
     {
         var screenshotId = Guid.NewGuid().ToString();
-        
+
         var screenshot = new Screenshot
         {
             Id = screenshotId,
@@ -154,7 +155,7 @@ public partial class PioneerService
             HeroName = $"submissions/{submissionId}/{screenshotId}/{ScreenShotSizeHero}.png",
             ThumbnailName = $"submissions/{submissionId}/{screenshotId}/{ScreenShotSizeThumbnail}.png",
         };
-        
+
         // Resize image to hero and thumbnail sizes
         await using var stream = screenshotSubmissionModel.File!.OpenReadStream();
 
@@ -175,17 +176,18 @@ public partial class PioneerService
             var thumbnailBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.ThumbnailName);
             await thumbnailBlobClient.UploadAsync(thumbnailImage.Encode().AsStream(), true);
         }
-        else 
+        else
         {
             // Set thumbnail and hero image to placeholder.
-            screenshot.OriginalName = $"submissions/{submissionId}/{screenshotId}/{screenshotSubmissionModel.File!.FileName}";
+            screenshot.OriginalName =
+                $"submissions/{submissionId}/{screenshotId}/{screenshotSubmissionModel.File!.FileName}";
             screenshot.HeroName = PlaceholderDocumentHeroBlobName;
             screenshot.ThumbnailName = PlaceholderDocumentThumbnailBlobName;
-            
+
             // Could not read image. Upload it as a raw document.
             var documentBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.OriginalName);
             await documentBlobClient.UploadAsync(screenshotSubmissionModel.File!.OpenReadStream(), true);
-            
+
             // Mark as document.
             screenshot.IsDocument = true;
         }
@@ -201,7 +203,7 @@ public partial class PioneerService
 
         return screenshot;
     }
-    
+
     public async Task<Stream?> GetScreenshotStream(Screenshot screenshot, string size)
     {
         string path;
@@ -211,19 +213,19 @@ public partial class PioneerService
             case ScreenShotSizeOriginal:
                 path = screenshot.OriginalName;
                 break;
-            
+
             case ScreenShotSizeHero:
                 path = screenshot.HeroName;
                 break;
-            
+
             case ScreenShotSizeThumbnail:
                 path = screenshot.ThumbnailName;
                 break;
-            
+
             default:
                 return null;
         }
-            
+
         var blobClient = _screenshotContainerClient.GetBlobClient(path);
         var stream = await blobClient.OpenReadAsync();
 
@@ -257,7 +259,7 @@ public partial class PioneerService
         // Award points if necessary.
         if (!await HasSubmittedToday(submission.Author))
         {
-            await AwardPoints(submission.Author, PointType.Submission,  PointsPerSubmission, submission.Id);
+            await AwardPoints(submission.Author, PointType.Submission, PointsPerSubmission, submission.Id);
         }
 
         return submission;
@@ -309,7 +311,7 @@ public partial class PioneerService
     private const int PageSize = 10;
 
     public async Task<List<Submission>> GetSubmissionsByFilter(
-        string userId = "", 
+        string userId = "",
         string productFilter = "",
         string tagFilter = "",
         bool dailyWinner = false,
@@ -342,12 +344,12 @@ public partial class PioneerService
 
             query = query.Where(s => s.Tags.Contains(tagFilter));
         }
-        
+
         if (dailyWinner)
         {
             query = query.Where(s => s.DailyVoteWinner);
         }
-        
+
         if (weeklyWinner)
         {
             query = query.Where(s => s.WeeklyVoteWinner);
@@ -400,7 +402,7 @@ public partial class PioneerService
             var thumbnailBlobClient = _screenshotContainerClient.GetBlobClient(screenshot.ThumbnailName);
             await thumbnailBlobClient.DeleteIfExistsAsync();
         }
-        
+
         // Delete actual subscription
         await _submissionsContainer.DeleteItemAsync<Submission>(submission.Id, new PartitionKey(submission.Author));
     }
@@ -467,7 +469,8 @@ public partial class PioneerService
         return null;
     }
 
-    public async Task<Point> AwardPoints(string userId, PointType type, int points, string frame = "", string tagId = "")
+    public async Task<Point> AwardPoints(string userId, PointType type, int points, string frame = "",
+        string tagId = "")
     {
         var profile = await GetProfileOrDefault(userId);
         profile.Points += points;
@@ -561,7 +564,7 @@ public partial class PioneerService
         while (feedIterator.HasMoreResults)
         {
             var points = await feedIterator.ReadNextAsync();
-            
+
             foreach (var point in points)
             {
                 return point;
@@ -603,9 +606,11 @@ public partial class PioneerService
 
     public async Task<List<Submission>> GetWeeklyVoteCandidateSubmission(string userIdToExclude)
     {
-        _logger.LogInformation("GetPreviousWeekStartDate: {PreviousWeekStartDate}, GetWeekStartDate: {WeekStartDate}", GetPreviousWeekStartDate(), GetWeekStartDate());
-        
-        var sql = "select * from Submissions s where s.createdDate >= @startOfWeek and s.createdDate < @endOfWeek and s.author != @userIdToExclude";
+        _logger.LogInformation("GetPreviousWeekStartDate: {PreviousWeekStartDate}, GetWeekStartDate: {WeekStartDate}",
+            GetPreviousWeekStartDate(), GetWeekStartDate());
+
+        var sql =
+            "select * from Submissions s where s.createdDate >= @startOfWeek and s.createdDate < @endOfWeek and s.author != @userIdToExclude";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@startOfWeek", GetPreviousWeekStartDate())
@@ -632,7 +637,8 @@ public partial class PioneerService
 
     public async Task<List<Submission>> GetDailyVoteCandidateSubmission(string userIdToExclude)
     {
-        var sql = "select * from Submissions s where s.createdDate >= @yesterday and s.createdDate < @today and s.author != @userIdToExclude";
+        var sql =
+            "select * from Submissions s where s.createdDate >= @yesterday and s.createdDate < @today and s.author != @userIdToExclude";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@yesterday", GetPreviousDayStartDate())
@@ -694,8 +700,10 @@ public partial class PioneerService
 
             await UpdateSubmission(submission);
 
-            await AwardPoints(userId, PointType.DailyVote, PointsPerDailyVoteCast, GetPreviousDayStartDate().ToString("s"), submissionId);
-            await AwardPoints(submission.Author, PointType.DailyVoteReceived, PointsPerDailyVoteReceived, GetPreviousDayStartDate().ToString("s"), submissionId);
+            await AwardPoints(userId, PointType.DailyVote, PointsPerDailyVoteCast,
+                GetPreviousDayStartDate().ToString("s"), submissionId);
+            await AwardPoints(submission.Author, PointType.DailyVoteReceived, PointsPerDailyVoteReceived,
+                GetPreviousDayStartDate().ToString("s"), submissionId);
         }
     }
 
@@ -715,11 +723,13 @@ public partial class PioneerService
 
             await UpdateSubmission(submission);
 
-            await AwardPoints(userId, PointType.WeeklyVote, PointsPerWeeklyVoteCast, GetPreviousWeekStartDate().ToString("s"), submissionId);
-            await AwardPoints(submission.Author, PointType.WeeklyVoteReceived, PointsPerWeeklyVoteReceived, GetPreviousWeekStartDate().ToString("s"), submissionId);
+            await AwardPoints(userId, PointType.WeeklyVote, PointsPerWeeklyVoteCast,
+                GetPreviousWeekStartDate().ToString("s"), submissionId);
+            await AwardPoints(submission.Author, PointType.WeeklyVoteReceived, PointsPerWeeklyVoteReceived,
+                GetPreviousWeekStartDate().ToString("s"), submissionId);
         }
     }
-    
+
     public async Task<string> AddCommentToSubmission(string submissionId, Comment comment)
     {
         var submission = await GetSubmissionById(submissionId);
@@ -729,7 +739,7 @@ public partial class PioneerService
             // Ignore
             return "";
         }
-        
+
         comment.Id = Guid.NewGuid().ToString();
         comment.CreatedDate = DateTime.Now;
 
@@ -747,18 +757,18 @@ public partial class PioneerService
         var startDate = latestDailyVoteDate.AddDays(1); // Move past last vote.
         var endDate = GetPreviousDayStartDate();
 
-        if (startDate < endDate) 
+        if (startDate < endDate)
         {
             // Calculate votes for each day.
             var dayCount = (endDate - startDate).Days;
-            
+
             for (var day = 0; day < dayCount; day++)
             {
                 var voteDate = startDate.AddDays(day);
                 await TallyDailyVotes(voteDate);
             }
         }
-        
+
         // Update weekly votes as necessary.
         var latestWeeklyVoteDate = await GetLatestWeeklyVoteResultsDate();
         var startWeek = latestWeeklyVoteDate.AddDays(7); // Move past last vote week.
@@ -768,7 +778,7 @@ public partial class PioneerService
         {
             // Calculate votes for each week.
             var weekCount = (endWeek - startWeek).Days / 7;
-            
+
             for (var week = 0; week < weekCount; week++)
             {
                 var voteDate = startDate.AddDays(week * 7);
@@ -780,27 +790,28 @@ public partial class PioneerService
     private async Task TallyDailyVotes(DateTime voteDate)
     {
         var sql = "select * from Submissions s where s.createdDate >= @startDate and s.createdDate < @endDate";
-        
+
         var query = new QueryDefinition(sql)
             .WithParameter("@startDate", voteDate)
             .WithParameter("@endDate", voteDate.AddDays(1));
 
         using var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
-        
+
         List<Submission> submissions = [];
-        
+
         while (feedIterator.HasMoreResults)
         {
             var results = await feedIterator.ReadNextAsync();
-            
-            submissions.AddRange(results);    
+
+            submissions.AddRange(results);
         }
 
         if (submissions.IsNullOrEmpty())
         {
             // No submissions to tally. Abort.
-            return; 
+            return;
         }
+
         var mostVotes = submissions.Max(r => r.DailyVotes);
 
         if (mostVotes == 0)
@@ -808,7 +819,7 @@ public partial class PioneerService
             // No votes cast. Abort.
             return;
         }
-        
+
         foreach (var submission in submissions.Where(submission => submission.DailyVotes == mostVotes))
         {
             submission.DailyVoteWinner = true;
@@ -820,27 +831,28 @@ public partial class PioneerService
     private async Task TallyWeeklyVotes(DateTime voteDate)
     {
         var sql = "select * from Submissions s where s.createdDate >= @startDate and s.createdDate < @endDate";
-        
+
         var query = new QueryDefinition(sql)
             .WithParameter("@startDate", voteDate)
             .WithParameter("@endDate", voteDate.AddDays(7));
 
         using var feedIterator = _submissionsContainer.GetItemQueryIterator<Submission>(query);
-        
+
         List<Submission> submissions = [];
-        
+
         while (feedIterator.HasMoreResults)
         {
             var results = await feedIterator.ReadNextAsync();
-            
-            submissions.AddRange(results);    
+
+            submissions.AddRange(results);
         }
 
         if (submissions.IsNullOrEmpty())
         {
             // No submissions to tally. Abort.
-            return; 
+            return;
         }
+
         var mostVotes = submissions.Max(r => r.WeeklyVotes);
 
         if (mostVotes == 0)
@@ -848,7 +860,7 @@ public partial class PioneerService
             // No votes cast. Abort.
             return;
         }
-        
+
         foreach (var submission in submissions.Where(submission => submission.WeeklyVotes == mostVotes))
         {
             submission.WeeklyVoteWinner = true;
@@ -859,19 +871,20 @@ public partial class PioneerService
 
     private async Task<DateTime> GetLatestDailyVoteResultsDate()
     {
-        var sql = "select value p.frame from Points p where p.type = @dailyVoteWinner order by p.frame desc offset 0 limit 1";
-        
+        var sql =
+            "select value p.frame from Points p where p.type = @dailyVoteWinner order by p.frame desc offset 0 limit 1";
+
         var query = new QueryDefinition(sql)
             .WithParameter("@dailyVoteWinner", PointType.DailyVoteWinner.ToString());
-        
+
         using var feedIterator = _pointsContainer.GetItemQueryIterator<DateTime>(query);
-        
-        var latestDailyVoteWinner = DateTime.Parse("2024-05-15");  // Date Copilot Pioneer was launched.
-        
+
+        var latestDailyVoteWinner = DateTime.Parse("2024-05-15"); // Date Copilot Pioneer was launched.
+
         while (feedIterator.HasMoreResults)
         {
             var frames = await feedIterator.ReadNextAsync();
-            
+
             foreach (var frame in frames)
             {
                 latestDailyVoteWinner = frame;
@@ -880,22 +893,23 @@ public partial class PioneerService
 
         return latestDailyVoteWinner;
     }
-    
+
     private async Task<DateTime> GetLatestWeeklyVoteResultsDate()
     {
-        var sql = "select value p.frame from Points p where p.type = @weeklyVoteWinner order by p.frame desc offset 0 limit 1";
-        
+        var sql =
+            "select value p.frame from Points p where p.type = @weeklyVoteWinner order by p.frame desc offset 0 limit 1";
+
         var query = new QueryDefinition(sql)
             .WithParameter("@weeklyVoteWinner", PointType.WeeklyVoteWinner.ToString());
-        
+
         using var feedIterator = _pointsContainer.GetItemQueryIterator<DateTime>(query);
-        
-        var latestWeeklyVoteWinner = DateTime.Parse("2024-05-13");  // Week Copilot Pioneer was launched.
-        
+
+        var latestWeeklyVoteWinner = DateTime.Parse("2024-05-13"); // Week Copilot Pioneer was launched.
+
         while (feedIterator.HasMoreResults)
         {
             var frames = await feedIterator.ReadNextAsync();
-            
+
             foreach (var frame in frames)
             {
                 latestWeeklyVoteWinner = frame;
@@ -903,5 +917,52 @@ public partial class PioneerService
         }
 
         return latestWeeklyVoteWinner;
+    }
+
+    private async Task<List<WinnerProfile>> GetVoteWinner(PointType type, string frame)
+    {
+        var sql = "select p.userId, p.frame from Points p where p.type = @type and p.frame = @frame";
+
+        var query = new QueryDefinition(sql)
+            .WithParameter("@type", type.ToString())
+            .WithParameter("@frame", frame);
+
+        using var feedIterator = _pointsContainer.GetItemQueryIterator<Point>(query);
+
+        List<WinnerProfile> winners = [];
+        
+        while (feedIterator.HasMoreResults)
+        {
+            var points = await feedIterator.ReadNextAsync();
+
+            foreach (var point in points)
+            {
+                // Get profile
+                var profile = await GetProfile(point.UserId);
+
+                var winner = new WinnerProfile
+                {
+                    UserId = point.UserId,
+                    UserName = profile?.Name ?? point.UserId,
+                    Date = DateTime.Parse(point.Frame),
+                };
+                
+                winners.Add(winner);
+            }
+        }
+
+        return winners;
+    }
+
+    public async Task<VoteWinners> GetVoteWinners()
+    {
+        var dailyWinner = await GetVoteWinner(PointType.DailyVoteWinner, GetPreviousDayStartDate().ToString("s"));
+        var weeklyWinner = await GetVoteWinner(PointType.WeeklyVoteWinner, GetPreviousWeekStartDate().ToString("s"));
+
+        return new VoteWinners
+        {
+            DailyWinners = dailyWinner,
+            WeeklyWinners = weeklyWinner,
+        };
     }
 }
