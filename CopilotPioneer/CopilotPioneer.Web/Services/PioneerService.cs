@@ -956,8 +956,8 @@ public partial class PioneerService
 
     public async Task<VoteWinners> GetVoteWinners()
     {
-        var dailyWinner = await GetVoteWinner(PointType.DailyVoteWinner, GetPreviousDayStartDate().ToString("s"));
-        var weeklyWinner = await GetVoteWinner(PointType.WeeklyVoteWinner, GetPreviousWeekStartDate().ToString("s"));
+        var dailyWinner = await GetVoteWinner(PointType.DailyVoteWinner, GetPreviousDayStartDate().AddDays(-1).ToString("s"));
+        var weeklyWinner = await GetVoteWinner(PointType.WeeklyVoteWinner, GetPreviousWeekStartDate().AddDays(-7).ToString("s"));
 
         return new VoteWinners
         {
