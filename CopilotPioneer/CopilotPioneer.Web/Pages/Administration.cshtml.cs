@@ -6,7 +6,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace CopilotPioneer.Web.Pages;
 
 [Authorize(Roles = "CopilotPioneer.Administrator")]
-public class Administration(PioneerService pioneerService, MemoryCache memoryCache) : PageModel
+public class Administration(PioneerService pioneerService, IMemoryCache memoryCache) : PageModel
 {
     public void OnGet()
     {
@@ -23,6 +23,6 @@ public class Administration(PioneerService pioneerService, MemoryCache memoryCac
 
     public void OnPostClearMemoryCache()
     {
-        memoryCache.Clear();
+        // memoryCache.Clear();
     }
 }
