@@ -21,7 +21,7 @@ public class Administration(PioneerService pioneerService, MemoryCache memoryCac
         memoryCache.Remove("voteWinners");
     }
 
-    public async void OnPostClearMemoryCache()
+    public void OnPostClearMemoryCache()
     {
         memoryCache.Clear();
     }

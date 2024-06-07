@@ -58,7 +58,7 @@ public class SubmissionView(PioneerService pioneerService) : PageModel
             Content = Comment.Content,
         };
 
-        await PioneerService.AddCommentToSubmission(SubmissionId, comment);
+        await PioneerService.AddCommentToSubmission(SubmissionId, comment, Url);
 
         return RedirectToPage();
     }

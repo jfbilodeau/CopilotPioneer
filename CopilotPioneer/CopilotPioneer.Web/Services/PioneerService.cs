@@ -1,7 +1,11 @@
 ﻿using System.Text.RegularExpressions;
+using Azure;
+using Azure.Communication.Email;
 using Azure.Storage.Blobs;
 using CopilotPioneer.Web.Models;
 using CopilotPioneer.Web.Pages;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Fluent;
 using Microsoft.Azure.Cosmos.Linq;
@@ -36,14 +40,16 @@ public partial class PioneerService
     const string PlaceholderDocumentHeroBlobName = "placeholder/document-hero.png";
     const string PlaceholderDocumentThumbnailBlobName = "placeholder/document-thumbnail.png";
 
-    private readonly IMemoryCache _memoryCache;
     private readonly ILogger<PioneerService> _logger;
+    private readonly IMemoryCache _memoryCache;
 
     private readonly Container _submissionsContainer;
     private readonly Container _profileContainer;
     private readonly Container _pointsContainer;
 
     private readonly BlobContainerClient _screenshotContainerClient;
+
+    private readonly EmailClient _emailClient;
 
     [GeneratedRegex(@"#\w+")]
     private static partial Regex TagRegex();
@@ -76,6 +82,9 @@ public partial class PioneerService
         var blobServiceClient = new BlobServiceClient(connectionString);
         _screenshotContainerClient = blobServiceClient.GetBlobContainerClient("screenshots");
         _screenshotContainerClient.CreateIfNotExists();
+        
+        var emailClientConnectionString = configuration["EmailClientConnectionString"];
+        _emailClient = new EmailClient(emailClientConnectionString);
 
         // Initialize document placeholder images
         _screenshotContainerClient
@@ -730,7 +739,7 @@ public partial class PioneerService
         }
     }
 
-    public async Task<string> AddCommentToSubmission(string submissionId, Comment comment)
+    public async Task<string> AddCommentToSubmission(string submissionId, Comment comment, IUrlHelper url)
     {
         var submission = await GetSubmissionById(submissionId);
 
@@ -746,6 +755,28 @@ public partial class PioneerService
         submission.Comments = [..submission.Comments, comment];
 
         await UpdateSubmission(submission);
+        
+        // Send email to submission author
+        var pathToAuthorProfile = url.PageLink("ProfileView", values: new { id = submission.Author });
+        var pathToSubmission = url.PageLink("SubmissionView",  values: new { id = submission.Id }, fragment: comment.Id);
+        
+        var html = $"""
+                    <h1>New comment on your submission</h1>
+                    <p>Submission: <a href="{pathToSubmission}">{submission.Title}</a></p>
+                    <p><a href="{pathToAuthorProfile}">{comment.Author}</a> has commented on your submission:<br/>
+                    <code>{comment.Content}</code>
+                    </p>
+                    <p><small>This is an automated message. Do not reply.</small></p>
+                    """;
+
+        var emailContent = new EmailContent("New comment on your submission")
+        {
+            Html = html,
+        };
+        
+        var message = new EmailMessage("DoNotReply@copilotpioneer.com", submission.Author, emailContent);
+
+        var emailSendOperation = await _emailClient.SendAsync(WaitUntil.Completed, message);
 
         return comment.Id;
     }
