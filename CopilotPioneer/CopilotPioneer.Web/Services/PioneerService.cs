@@ -5,7 +5,6 @@ using Azure.Storage.Blobs;
 using CopilotPioneer.Web.Models;
 using CopilotPioneer.Web.Pages;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Fluent;
 using Microsoft.Azure.Cosmos.Linq;
@@ -82,7 +81,7 @@ public partial class PioneerService
         var blobServiceClient = new BlobServiceClient(connectionString);
         _screenshotContainerClient = blobServiceClient.GetBlobContainerClient("screenshots");
         _screenshotContainerClient.CreateIfNotExists();
-        
+
         var emailClientConnectionString = configuration["EmailClientConnectionString"];
         _emailClient = new EmailClient(emailClientConnectionString);
 
@@ -331,7 +330,7 @@ public partial class PioneerService
     )
     {
         var query = _submissionsContainer.GetItemLinqQueryable<Submission>().AsQueryable();
-        
+
         if (!string.IsNullOrWhiteSpace(userId))
         {
             query = query.Where(s => s.Author == userId);
@@ -510,7 +509,8 @@ public partial class PioneerService
 
     private async Task<bool> HasSubmittedToday(string userId)
     {
-        var sql = "select * from Points p where p.userId = @userId and p.dateCreated >= @dateCreated";
+        var sql =
+            "select * from Points p where p.userId = @userId and p.dateCreated >= @dateCreated and p.type = 'Submission'";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@userId", userId)
@@ -762,11 +762,11 @@ public partial class PioneerService
         submission.Comments = [..submission.Comments, comment];
 
         await UpdateSubmission(submission);
-        
+
         // Send email to submission author
         var pathToAuthorProfile = url.PageLink("ProfileView", values: new { id = submission.Author });
-        var pathToSubmission = url.PageLink("SubmissionView",  values: new { id = submission.Id }, fragment: comment.Id);
-        
+        var pathToSubmission = url.PageLink("SubmissionView", values: new { id = submission.Id }, fragment: comment.Id);
+
         var html = $"""
                     <h1>New comment on your submission</h1>
                     <p>Submission: <a href="{pathToSubmission}">{submission.Title}</a></p>
@@ -780,7 +780,7 @@ public partial class PioneerService
         {
             Html = html,
         };
-        
+
         var message = new EmailMessage("DoNotReply@copilotpioneer.com", submission.Author, emailContent);
 
         var emailSendOperation = await _emailClient.SendAsync(WaitUntil.Completed, message);
@@ -934,7 +934,8 @@ public partial class PioneerService
 
     private async Task<DateTime> GetLatestWeeklyVoteResultsDate()
     {
-        var sql = "select value p.frame from Points p where p.type = @weeklyVoteWinner order by p.frame desc offset 0 limit 1";
+        var sql =
+            "select value p.frame from Points p where p.type = @weeklyVoteWinner order by p.frame desc offset 0 limit 1";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@weeklyVoteWinner", PointType.WeeklyVoteWinner.ToString());
@@ -967,7 +968,7 @@ public partial class PioneerService
         using var feedIterator = _pointsContainer.GetItemQueryIterator<Point>(query);
 
         List<WinnerProfile> winners = [];
-        
+
         while (feedIterator.HasMoreResults)
         {
             var points = await feedIterator.ReadNextAsync();
@@ -976,7 +977,7 @@ public partial class PioneerService
             {
                 // Get profile
                 var profile = await GetProfileOrDefault(point.UserId);
-                
+
                 // Get submission
                 var submission = await GetSubmissionById(point.TagId);
 
@@ -986,7 +987,7 @@ public partial class PioneerService
                     Profile = profile,
                     Submission = submission,
                 };
-                
+
                 winners.Add(winner);
             }
         }
@@ -996,8 +997,10 @@ public partial class PioneerService
 
     public async Task<VoteWinners> GetVoteWinners()
     {
-        var dailyWinner = await GetVoteWinner(PointType.DailyVoteWinner, GetPreviousDayStartDate().AddDays(-1).ToString("s"));
-        var weeklyWinner = await GetVoteWinner(PointType.WeeklyVoteWinner, GetPreviousWeekStartDate().AddDays(-7).ToString("s"));
+        var dailyWinner =
+            await GetVoteWinner(PointType.DailyVoteWinner, GetPreviousDayStartDate().AddDays(-1).ToString("s"));
+        var weeklyWinner = await GetVoteWinner(PointType.WeeklyVoteWinner,
+            GetPreviousWeekStartDate().AddDays(-7).ToString("s"));
 
         return new VoteWinners
         {
