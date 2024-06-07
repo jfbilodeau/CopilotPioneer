@@ -331,7 +331,7 @@ public partial class PioneerService
     )
     {
         var query = _submissionsContainer.GetItemLinqQueryable<Submission>().AsQueryable();
-
+        
         if (!string.IsNullOrWhiteSpace(userId))
         {
             query = query.Where(s => s.Author == userId);
@@ -364,13 +364,20 @@ public partial class PioneerService
             query = query.Where(s => s.WeeklyVoteWinner);
         }
 
-        if (sortBy == "oldest")
+        switch (sortBy)
         {
-            query = query.OrderBy(s => s.CreatedDate);
-        }
-        else
-        {
-            query = query.OrderByDescending(s => s.CreatedDate);
+            case "dailyVotes":
+                query = query.OrderByDescending(s => s.DailyVotes);
+                break;
+            case "weeklyVotes":
+                query = query.OrderByDescending(s => s.WeeklyVotes);
+                break;
+            case "oldest":
+                query = query.OrderBy(s => s.CreatedDate);
+                break;
+            default:
+                query = query.OrderByDescending(s => s.CreatedDate);
+                break;
         }
 
         query = query.Skip(pageNumber * pageSize).Take(pageSize);
