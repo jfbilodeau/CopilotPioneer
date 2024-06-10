@@ -29,7 +29,7 @@
                     <li>
                         <h4>@submission.Title</h4>
                         <p>@submission.Prompt</p>
-                        <p>Submitted by <a asp-page="ProfileView" asp-route-id="@submission.Author">@submission.Author</a> on @submission.CreatedDate</p>
+                        @* <p>Submitted by <a asp-page="ProfileView" asp-route-id="@submission.Author">@submission.Author</a> on @submission.CreatedDate</p> *@
                         <form method="post">
                             <input type="hidden" name="submissionId" value="@submission.Id"/>
                             <button type="submit" asp-page-handler="CastWeeklyVote" class="btn btn-primary">Vote</button>
@@ -63,7 +63,7 @@
                     <li>
                         <h4>@submission.Title</h4>
                         <p>@submission.Prompt</p>
-                        <p>Submitted by <a asp-page="ProfileView" asp-route-id="@submission.Author">@submission.Author</a> on @submission.CreatedDate</p>
+                        @* <p>Submitted by <a asp-page="ProfileView" asp-route-id="@submission.Author">@submission.Author</a> on @submission.CreatedDate</p> *@
                         <form method="post">
                             <input type="hidden" name="submissionId" value="@submission.Id"/>
                             <button type="submit" asp-page-handler="CastDailyVote" class="btn btn-primary">Vote</button>
