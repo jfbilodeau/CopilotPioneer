@@ -818,7 +818,7 @@ public partial class PioneerService
     {
         // Update daily votes as necessary.
         var latestDailyVoteDate = await GetLatestDailyVoteResultsDate();
-        var startDate = latestDailyVoteDate.AddDays(1); // Move past last vote.
+        var startDate = latestDailyVoteDate.AddDays(1); // Move past last vote winner.
         var endDate = GetPreviousDayStartDate();
 
         if (startDate < endDate)
@@ -835,8 +835,8 @@ public partial class PioneerService
 
         // Update weekly votes as necessary.
         var latestWeeklyVoteDate = await GetLatestWeeklyVoteResultsDate();
-        var startWeek = latestWeeklyVoteDate.AddDays(7); // Move past last vote week.
-        var endWeek = GetPreviousWeekStartDate();
+        var startWeek = latestWeeklyVoteDate + TimeSpan.FromDays(7);  // Most one week past last vote winner.
+        var endWeek = GetPreviousWeekStartDate().AddDays(-7); // Move back two weeks ago.
 
         if (startWeek < endWeek)
         {
@@ -845,7 +845,7 @@ public partial class PioneerService
 
             for (var week = 0; week < weekCount; week++)
             {
-                var voteDate = startDate.AddDays(week * 7);
+                var voteDate = startWeek.AddDays(week * 7);
                 await TallyWeeklyVotes(voteDate);
             }
         }
@@ -985,6 +985,9 @@ public partial class PioneerService
 
     private async Task<List<WinnerProfile>> GetVoteWinner(PointType type, string frame)
     {
+        // Make sure votes are tallied
+        await TallyVotes();
+        
         var sql = "select p.userId, p.frame, p.tagId from Points p where p.type = @type and p.frame = @frame";
 
         var query = new QueryDefinition(sql)
