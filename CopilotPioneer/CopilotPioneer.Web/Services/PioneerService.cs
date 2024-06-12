@@ -716,10 +716,23 @@ public partial class PioneerService
 
             await UpdateSubmission(submission);
 
-            await AwardPoints(userId, PointType.DailyVote, PointsPerDailyVoteCast,
-                GetPreviousDayStartDate().ToString("s"), submissionId);
-            await AwardPoints(submission.Author, PointType.DailyVoteReceived, PointsPerDailyVoteReceived,
-                GetPreviousDayStartDate().ToString("s"), submissionId);
+            var frame = GetPreviousDayStartDate().ToString("s");
+            
+            await AwardPoints(
+                userId, 
+                PointType.DailyVote, 
+                PointsPerDailyVoteCast,
+                frame, 
+                submissionId
+            );
+            
+            await AwardPoints(
+                submission.Author, 
+                PointType.DailyVoteReceived, 
+                PointsPerDailyVoteReceived,
+                frame, 
+                submissionId
+            );
         }
     }
 
@@ -739,10 +752,23 @@ public partial class PioneerService
 
             await UpdateSubmission(submission);
 
-            await AwardPoints(userId, PointType.WeeklyVote, PointsPerWeeklyVoteCast,
-                GetPreviousWeekStartDate().ToString("s"), submissionId);
-            await AwardPoints(submission.Author, PointType.WeeklyVoteReceived, PointsPerWeeklyVoteReceived,
-                GetPreviousWeekStartDate().ToString("s"), submissionId);
+            var frame = GetPreviousWeekStartDate().ToString("s");
+            
+            await AwardPoints(
+                userId, 
+                PointType.WeeklyVote, 
+                PointsPerWeeklyVoteCast,
+                frame, 
+                submissionId
+            );
+            
+            await AwardPoints(
+                submission.Author, 
+                PointType.WeeklyVoteReceived, 
+                PointsPerWeeklyVoteReceived,
+                frame, 
+                submissionId
+            );
         }
     }
 
@@ -997,10 +1023,13 @@ public partial class PioneerService
 
     public async Task<VoteWinners> GetVoteWinners()
     {
-        var dailyWinner =
-            await GetVoteWinner(PointType.DailyVoteWinner, GetPreviousDayStartDate().AddDays(-1).ToString("s"));
-        var weeklyWinner = await GetVoteWinner(PointType.WeeklyVoteWinner,
-            GetPreviousWeekStartDate().AddDays(-7).ToString("s"));
+        var dailyVoteFrame = GetPreviousDayStartDate().AddDays(-1).ToString("s");
+        _logger.LogInformation("Fetching daily vote winner for frame {DailyVoteFrame}", dailyVoteFrame);
+        var dailyWinner = await GetVoteWinner(PointType.DailyVoteWinner, dailyVoteFrame);
+
+        var weeklyVoteFrame = GetPreviousWeekStartDate().AddDays(-7).ToString("s");
+        _logger.LogInformation("Fetching weekly vote winner for frame {WeeklyVoteFrame}", weeklyVoteFrame);
+        var weeklyWinner = await GetVoteWinner(PointType.WeeklyVoteWinner, weeklyVoteFrame);
 
         return new VoteWinners
         {
