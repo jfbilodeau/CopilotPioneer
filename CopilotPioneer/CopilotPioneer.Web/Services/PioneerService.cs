@@ -836,7 +836,7 @@ public partial class PioneerService
         // Update weekly votes as necessary.
         var latestWeeklyVoteDate = await GetLatestWeeklyVoteResultsDate();
         var startWeek = latestWeeklyVoteDate + TimeSpan.FromDays(7);  // Most one week past last vote winner.
-        var endWeek = GetPreviousWeekStartDate().AddDays(-7); // Move back two weeks ago.
+        var endWeek = GetPreviousWeekStartDate();
 
         if (startWeek < endWeek)
         {
