@@ -853,6 +853,8 @@ public partial class PioneerService
 
     private async Task TallyDailyVotes(DateTime voteDate)
     {
+        _logger.LogInformation("Tallying daily votes for {VoteDate}", voteDate);
+        
         var sql = "select * from Submissions s where s.createdDate >= @startDate and s.createdDate < @endDate";
 
         var query = new QueryDefinition(sql)
@@ -894,6 +896,8 @@ public partial class PioneerService
 
     private async Task TallyWeeklyVotes(DateTime voteDate)
     {
+        _logger.LogInformation("Tallying weekly votes for {VoteDate}", voteDate);
+        
         var sql = "select * from Submissions s where s.createdDate >= @startDate and s.createdDate < @endDate";
 
         var query = new QueryDefinition(sql)
@@ -985,9 +989,6 @@ public partial class PioneerService
 
     private async Task<List<WinnerProfile>> GetVoteWinner(PointType type, string frame)
     {
-        // Make sure votes are tallied
-        await TallyVotes();
-        
         var sql = "select p.userId, p.frame, p.tagId from Points p where p.type = @type and p.frame = @frame";
 
         var query = new QueryDefinition(sql)
@@ -1026,6 +1027,9 @@ public partial class PioneerService
 
     public async Task<VoteWinners> GetVoteWinners()
     {
+        // Make sure votes are tallied
+        await TallyVotes();
+        
         var dailyVoteFrame = GetPreviousDayStartDate().AddDays(-1).ToString("s");
         _logger.LogInformation("Fetching daily vote winner for frame {DailyVoteFrame}", dailyVoteFrame);
         var dailyWinner = await GetVoteWinner(PointType.DailyVoteWinner, dailyVoteFrame);
