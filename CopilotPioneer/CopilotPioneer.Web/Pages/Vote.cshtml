@@ -6,73 +6,92 @@
     ViewData["Title"] = "Vote";
 }
 
-<div>
-    <h1>Weekly Vote</h1>
-    
-    @if (Model.WeeklyVoteCast)
-    {
-        <p>You have already voted. Thank you! ❤️</p>
-    }
-    else
-    {
-        <h3>Vote for your favourite prompt:</h3>
-        @if (Model.WeeklySubmissions.IsNullOrEmpty())
-        {
-            <p>There were no submissions last week 😱</p>
-            <p><small>(or you're the only one who submitted)</small></p>
-        }
-        else
-        {
-            <ul>
-                @foreach (var submission in Model.WeeklySubmissions)
+<div class="container">
+    <h1 class="display-4">Weekly Vote</h1>
+
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" type="button" data-bs-toggle="tab" data-bs-target="#dailyVote">Daily Vote</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" type="button" data-bs-toggle="tab" data-bs-target="#weeklyVote">Weekly Vote</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="dailyVote">
+            <h1>Daily Vote</h1>
+
+            @if (Model.DailyVoteCast)
+            {
+                <p>You have already voted. Thank you! ❤️</p>
+            }
+            else
+            {
+                @if (Model.DailySubmissions.IsNullOrEmpty())
                 {
-                    <li>
-                        <h4>@submission.Title</h4>
-                        <p>@submission.Prompt</p>
-                        @* <p>Submitted by <a asp-page="ProfileView" asp-route-id="@submission.Author">@submission.Author</a> on @submission.CreatedDate</p> *@
-                        <form method="post">
-                            <input type="hidden" name="submissionId" value="@submission.Id"/>
-                            <button type="submit" asp-page-handler="CastWeeklyVote" class="btn btn-primary">Vote</button>
-                        </form>
-                    </li>
+                    <p>There were no submissions yesterday 😱</p>
+                    <p>
+                        <small>(or you're the only one who submitted)</small>
+                    </p>
                 }
-            </ul>
-        }
-    
-        <hr/>
-    }
-    
-    <h1>Daily Vote</h1>
-    
-    @if (Model.DailyVoteCast)
-    {
-        <p>You have already voted. Thank you! ❤️</p>
-    }
-    else
-    {
-        @if (Model.DailySubmissions.IsNullOrEmpty())
-        {
-            <p>There were no submissions yesterday 😱</p>
-            <p><small>(or you're the only one who submitted)</small></p>
-        }
-        else
-        {
-            <ul>
-                @foreach (var submission in Model.DailySubmissions)
+                else
                 {
-                    <li>
-                        <h4>@submission.Title</h4>
-                        <p>@submission.Prompt</p>
-                        @* <p>Submitted by <a asp-page="ProfileView" asp-route-id="@submission.Author">@submission.Author</a> on @submission.CreatedDate</p> *@
-                        <form method="post">
-                            <input type="hidden" name="submissionId" value="@submission.Id"/>
-                            <button type="submit" asp-page-handler="CastDailyVote" class="btn btn-primary">Vote</button>
-                        </form>
-                    </li>
+                    <ul>
+                        @foreach (var submission in Model.DailySubmissions)
+                        {
+                            <li>
+                                <h4>@submission.Title</h4>
+                                <p>@submission.Prompt</p>
+                                @* <p>Submitted by <a asp-page="ProfileView" asp-route-id="@submission.Author">@submission.Author</a> on @submission.CreatedDate</p> *@
+                                <form method="post">
+                                    <input type="hidden" name="submissionId" value="@submission.Id"/>
+                                    <button type="submit" asp-page-handler="CastDailyVote" class="btn btn-primary">Vote</button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
                 }
-            </ul>
-        }
-    }
+            }
+        </div>
+        <div class="tab-pane fade" id="weeklyVote">
+            @if (Model.WeeklyVoteCast)
+            {
+                <p>You have already voted. Thank you! ❤️</p>
+            }
+            else
+            {
+                <h3>Vote for your favourite prompt:</h3>
+                @if (Model.WeeklySubmissions.IsNullOrEmpty())
+                {
+                    <p>There were no submissions last week 😱</p>
+                    <p>
+                        <small>(or you're the only one who submitted)</small>
+                    </p>
+                }
+                else
+                {
+                    <ul>
+                        @foreach (var submission in Model.WeeklySubmissions)
+                        {
+                            <li>
+                                <h4>@submission.Title</h4>
+                                <p>@submission.Prompt</p>
+                                @* <p>Submitted by <a asp-page="ProfileView" asp-route-id="@submission.Author">@submission.Author</a> on @submission.CreatedDate</p> *@
+                                <form method="post">
+                                    <input type="hidden" name="submissionId" value="@submission.Id"/>
+                                    <button type="submit" asp-page-handler="CastWeeklyVote" class="btn btn-primary">Vote</button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                <hr/>
+            }
+
+        </div>
+    </div>
 
     <p>
         <a asp-page="Leaderboard">Visit leaderboard</a>

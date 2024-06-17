@@ -19,6 +19,8 @@
             
             pioneer.copyToClipboard(text)
         },
+        
+        
     }
     
     window.pioneer = pioneer
