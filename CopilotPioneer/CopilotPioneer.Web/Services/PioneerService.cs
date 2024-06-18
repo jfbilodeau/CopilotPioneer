@@ -25,8 +25,8 @@ public partial class PioneerService
 {
     // For now, hardcode points here.
     private const int PointsPerSubmission = 3;
-    private const int PointsPerDailyVoteReceived = 1;
     private const int PointsPerDailyVoteCast = 1;
+    private const int PointsPerDailyVoteReceived = 1;
     private const int PointsPerWeeklyVoteCast = 2;
     private const int PointsPerWeeklyVoteReceived = 2;
 
@@ -1030,9 +1030,18 @@ public partial class PioneerService
         // Make sure votes are tallied
         await TallyVotes();
         
-        var dailyVoteFrame = GetPreviousDayStartDate().AddDays(-1).ToString("s");
-        _logger.LogInformation("Fetching daily vote winner for frame {DailyVoteFrame}", dailyVoteFrame);
-        var dailyWinner = await GetVoteWinner(PointType.DailyVoteWinner, dailyVoteFrame);
+        var dailyVoteFrame = GetPreviousDayStartDate().AddDays(-1);
+        switch (dailyVoteFrame.DayOfWeek)
+        {
+            case DayOfWeek.Saturday:
+                dailyVoteFrame -= TimeSpan.FromDays(1);
+                break;
+            case DayOfWeek.Sunday:
+                dailyVoteFrame -= TimeSpan.FromDays(2);
+                break;
+        }
+        _logger.LogInformation("Fetching daily vote winner for frame {DailyVoteFrame}", dailyVoteFrame.ToString("s"));
+        var dailyWinner = await GetVoteWinner(PointType.DailyVoteWinner, dailyVoteFrame.ToString("s"));
 
         var weeklyVoteFrame = GetPreviousWeekStartDate().AddDays(-7).ToString("s");
         _logger.LogInformation("Fetching weekly vote winner for frame {WeeklyVoteFrame}", weeklyVoteFrame);
