@@ -54,9 +54,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_A17BB6F4D4A54D108B8BCF75EFF27197 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_FDB5AFD3EC8A4BC79F4B5EB749B658EF }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B2167169BA72492BAED5EB24AA32873A }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       # Deploy to prod environment
       - name: Deploy to Azure Web App
@@ -85,9 +83,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_A17BB6F4D4A54D108B8BCF75EFF27197 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_FDB5AFD3EC8A4BC79F4B5EB749B658EF }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B2167169BA72492BAED5EB24AA32873A }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       # Second deploy to test environment
       - name: Deploy to Azure Web App
