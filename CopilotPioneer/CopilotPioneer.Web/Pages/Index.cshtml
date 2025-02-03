@@ -12,13 +12,20 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Latest submissions</h1>
+    <h2 class="display-4">Theme of the week:</h2>
+    <h1 class="display-4">Help me prepare a presentation...</h1>
+
     <p>
         <a asp-page="SubmissionCreate">Submit your prompt to Copilot Pioneer here</a>
     </p>
+
+    <h1 class="display-4">Latest submissions</h1>
+
     <div class="container">
         <div class="row">
             <div class="alert alert-success">
+                @if (false)
+                {
                 @if (winners != null)
                 {
                     @if (winners.WeeklyWinners.Count == 0)
@@ -67,6 +74,7 @@
                             }
                         </div>
                     }
+                }
                 }
             </div>
         </div>
