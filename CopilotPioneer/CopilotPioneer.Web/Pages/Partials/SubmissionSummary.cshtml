@@ -46,7 +46,8 @@
             </div>
         }
 
-        <small>Submitted by <a asp-page="ProfileView" asp-route-id="@Model.Author">@Model.Author</a> @@ @Model.CreatedDate 
+        @* <small>Submitted by <a asp-page="ProfileView" asp-route-id="@Model.Author">@Model.Author</a> @@ @Model.CreatedDate  *@
+        <small>Submitted at @Model.CreatedDate 
             @if (Model.DailyVotes > 0 || Model.WeeklyVotes > 0)
             {
                 <span>(
