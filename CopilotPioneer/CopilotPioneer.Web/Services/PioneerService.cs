@@ -50,6 +50,8 @@ public partial class PioneerService
 
     private readonly EmailClient _emailClient;
 
+    private readonly string _theme = string.Empty;
+
     [GeneratedRegex(@"#\w+")]
     private static partial Regex TagRegex();
 
@@ -60,6 +62,8 @@ public partial class PioneerService
 
         var cosmosDbConnectionString = configuration["CosmosDbConnectionString"];
         var cosmosDbDatabaseName = configuration["CosmosDbDatabaseName"];
+
+        _theme = configuration["Theme"] ?? "`Theme` not set";
 
         var cosmosClient = new CosmosClientBuilder(cosmosDbConnectionString)
             .WithSerializerOptions(new CosmosSerializationOptions
@@ -939,15 +943,16 @@ public partial class PioneerService
 
     private async Task<DateTime> GetLatestDailyVoteResultsDate()
     {
-        var sql =
-            "select value p.frame from Points p where p.type = @dailyVoteWinner order by p.frame desc offset 0 limit 1";
+        // var latestDailyVoteWinner = DateTime.Parse("2024-05-15"); // Date Copilot Pioneer was launched.
+        var latestDailyVoteWinner = DateTime.Now.AddDays(-7); // Go back a week.
+
+        var sql = "select value p.frame from Points p where p.type = @dailyVoteWinner and p.dateCreated >= @latestDailyVoteWinner order by p.frame desc offset 0 limit 1";
 
         var query = new QueryDefinition(sql)
-            .WithParameter("@dailyVoteWinner", PointType.DailyVoteWinner.ToString());
+            .WithParameter("@dailyVoteWinner", PointType.DailyVoteWinner.ToString())
+            .WithParameter("@latestDailyVoteWinner", latestDailyVoteWinner);
 
         using var feedIterator = _pointsContainer.GetItemQueryIterator<DateTime>(query);
-
-        var latestDailyVoteWinner = DateTime.Parse("2024-05-15"); // Date Copilot Pioneer was launched.
 
         while (feedIterator.HasMoreResults)
         {
@@ -964,15 +969,17 @@ public partial class PioneerService
 
     private async Task<DateTime> GetLatestWeeklyVoteResultsDate()
     {
+        // var latestWeeklyVoteWinner = DateTime.Parse("2024-05-13"); // Week Copilot Pioneer was launched.
+        var latestWeeklyVoteWinner = DateTime.Now.AddDays(-14); // Go back two week.
+
         var sql =
-            "select value p.frame from Points p where p.type = @weeklyVoteWinner order by p.frame desc offset 0 limit 1";
+            "select value p.frame from Points p where p.type = @weeklyVoteWinner and p.dateCreated >= @latestWeeklyVoteWinner order by p.frame desc offset 0 limit 1";
 
         var query = new QueryDefinition(sql)
-            .WithParameter("@weeklyVoteWinner", PointType.WeeklyVoteWinner.ToString());
-
+            .WithParameter("@weeklyVoteWinner", PointType.WeeklyVoteWinner.ToString())
+            .WithParameter("@latestWeeklyVoteWinner", latestWeeklyVoteWinner);
+            
         using var feedIterator = _pointsContainer.GetItemQueryIterator<DateTime>(query);
-
-        var latestWeeklyVoteWinner = DateTime.Parse("2024-05-13"); // Week Copilot Pioneer was launched.
 
         while (feedIterator.HasMoreResults)
         {
@@ -1053,4 +1060,6 @@ public partial class PioneerService
             WeeklyWinners = weeklyWinner,
         };
     }
+
+    public string Theme => _theme;
 }

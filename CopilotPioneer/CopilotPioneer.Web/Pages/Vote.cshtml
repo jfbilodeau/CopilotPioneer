@@ -2,11 +2,19 @@
 @using Microsoft.IdentityModel.Tokens
 @model CopilotPioneer.Web.Pages.Vote
 
+@inject CopilotPioneer.Web.Services.PioneerService PioneerService
+
 @{
     ViewData["Title"] = "Vote";
 }
 
 <div class="container">
+    <div class="alert alert-warning" role="alert">
+        <h2 class="display-4 fw-bold">Vote on the theme!</h2>
+        <h3 class="display-5">"@PioneerService.Theme"</h3>
+        <p>If the winning voted is not on theme, all points awarded on that voted will retracted.</p>
+    </div>
+
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" type="button" data-bs-toggle="tab" data-bs-target="#dailyVote">Daily Vote</button>

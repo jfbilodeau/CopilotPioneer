@@ -5,6 +5,8 @@
 
 @model IndexModel
 @inject IMemoryCache MemoryCache
+@inject CopilotPioneer.Web.Services.PioneerService PioneerService
+
 @{
     ViewData["Title"] = "Home";
 
@@ -14,7 +16,7 @@
 <div class="text-center">
     <div class="alert alert-info">
         <h2 class="display-6">Theme of the week:</h2>
-        <h1 class="display-4 fw-bold">"Copilot, help me prepare a presentation. 🤖"</h1>
+        <h1 class="display-4 fw-bold">@PioneerService.Theme</h1>
     </div>
 
     <p>
@@ -28,31 +30,28 @@
             <div class="alert alert-success">
                 @if (winners != null)
                 {
-                    @if (false)
+                    @if (winners.WeeklyWinners.Count == 0)
                     {
-                        @if (winners.WeeklyWinners.Count == 0)
-                        {
-                            <h2>There were no votes last week 😱</h2>
-                        }
-                        else
-                        {
-                            <h2>Congratulations to the weekly vote winner(s):</h2>
-                            <div>
-                                @foreach (var winner in winners.WeeklyWinners)
-                                {
-                                    <p>
-                                        @winner.Profile.GetDisplayName() -
+                        <h2>There were no votes last week 😱</h2>
+                    }
+                    else
+                    {
+                        <h2>Congratulations to the weekly vote winner(s):</h2>
+                        <div>
+                            @foreach (var winner in winners.WeeklyWinners)
+                            {
+                                <p>
+                                    @winner.Profile.GetDisplayName() -
 
-                                        @if (winner.Submission != null)
-                                        {
-                                            <a asp-page="SubmissionView" asp-route-id="@winner.Submission.Id">@winner.Submission.Title</a>
-                                        }
+                                    @if (winner.Submission != null)
+                                    {
+                                        <a asp-page="SubmissionView" asp-route-id="@winner.Submission.Id">@winner.Submission.Title</a>
+                                    }
 
-                                        🥇
-                                    </p>
-                                }
-                            </div>
-                        }
+                                    🥇
+                                </p>
+                            }
+                        </div>
                     }
                     @if (winners.DailyWinners.Count == 0)
                     {
