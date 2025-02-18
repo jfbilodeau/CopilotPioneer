@@ -50,6 +50,19 @@
                                 <h4>@submission.Title</h4>
                                 <p>@submission.Prompt</p>
                                 @* <p>Submitted by <a asp-page="ProfileView" asp-route-id="@submission.Author">@submission.Author</a> on @submission.CreatedDate</p> *@
+                                        
+                                @if (submission.Screenshots.Length > 0)
+                                {
+                                    <div class="card-link">
+                                        @foreach (var screenshot in submission.Screenshots)
+                                        {
+                                            <a asp-page="ScreenshotView" asp-route-submissionId="@screenshot.SubmissionId" asp-route-screenshotId="@screenshot.Id" asp-route-size="original" target="_blank">
+                                                <img src="/ScreenshotView/@screenshot.SubmissionId/@screenshot.Id/thumbnail" class="img-thumbnail" alt="@screenshot.AltText"/>
+                                            </a>
+                                        }
+                                    </div>
+                                }
+
                                 <form method="post">
                                     <input type="hidden" name="submissionId" value="@submission.Id"/>
                                     <button type="submit" asp-page-handler="CastDailyVote" class="btn btn-primary">Vote</button>
