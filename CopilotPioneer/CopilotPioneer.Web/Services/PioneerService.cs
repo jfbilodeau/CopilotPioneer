@@ -51,6 +51,7 @@ public partial class PioneerService
     private readonly EmailClient _emailClient;
 
     private readonly string _theme = string.Empty;
+    private readonly string _previousTheme = string.Empty;
 
     [GeneratedRegex(@"#\w+")]
     private static partial Regex TagRegex();
@@ -64,6 +65,7 @@ public partial class PioneerService
         var cosmosDbDatabaseName = configuration["CosmosDbDatabaseName"];
 
         _theme = configuration["Theme"] ?? "`Theme` not set";
+        _previousTheme = configuration["PreviousTheme"] ?? "`PreviousTheme` not set";
 
         var cosmosClient = new CosmosClientBuilder(cosmosDbConnectionString)
             .WithSerializerOptions(new CosmosSerializationOptions
@@ -1062,4 +1064,5 @@ public partial class PioneerService
     }
 
     public string Theme => _theme;
+    public string PreviousTheme => _previousTheme;
 }
