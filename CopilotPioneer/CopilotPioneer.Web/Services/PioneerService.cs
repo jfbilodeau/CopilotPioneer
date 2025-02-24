@@ -632,7 +632,7 @@ public partial class PioneerService
             GetPreviousWeekStartDate(), GetWeekStartDate());
 
         var sql =
-            "select * from Submissions s where s.createdDate >= @startOfWeek and s.createdDate < @endOfWeek and s.author != @userIdToExclude and dailyVoteWinner = true";
+            "select * from Submissions s where s.createdDate >= @startOfWeek and s.createdDate < @endOfWeek and s.author != @userIdToExclude and s.dailyVoteWinner = true";
 
         var query = new QueryDefinition(sql)
             .WithParameter("@startOfWeek", GetPreviousWeekStartDate())
