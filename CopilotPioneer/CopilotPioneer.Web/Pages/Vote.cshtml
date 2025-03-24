@@ -22,11 +22,14 @@
         <div class="tab-pane fade show active" id="dailyVote">
             <h1>Daily Vote</h1>
 
-            <div class="alert alert-warning" role="alert">
-                <h2 class="display-4 fw-bold">Vote on the challenge theme!</h2>
-                <h3 class="display-5">"@PioneerService.PreviousTheme"</h3>
-                <p>If the winning vote is not on challenge theme, all points awarded on that voted will retracted.</p>
-            </div>
+            @if (!string.IsNullOrEmpty(PioneerService.Theme))
+            {
+                <div class="alert alert-warning" role="alert">
+                    <h2 class="display-4 fw-bold">Vote on the challenge theme!</h2>
+                    <h3 class="display-5">"@PioneerService.PreviousTheme"</h3>
+                    <p>If the winning vote is not on challenge theme, all points awarded on that voted will retracted.</p>
+                </div>
+            }
 
             @if (Model.DailyVoteCast)
             {

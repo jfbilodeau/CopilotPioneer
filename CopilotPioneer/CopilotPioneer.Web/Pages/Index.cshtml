@@ -14,10 +14,13 @@
 }
 
 <div class="text-center">
-    <div class="alert alert-info">
-        <h2 class="display-6">Challenge of the week:</h2>
-        <h1 class="display-4 fw-bold">@PioneerService.Theme</h1>
-    </div>
+    @if (!string.IsNullOrEmpty(PioneerService.Theme))
+    {
+        <div class="alert alert-info">
+            <h2 class="display-6">Challenge of the week:</h2>
+            <h1 class="display-4 fw-bold">@PioneerService.Theme</h1>
+        </div>
+    }
 
     <p>
         <a asp-page="SubmissionCreate">Submit your prompt to Copilot Pioneer here</a>
